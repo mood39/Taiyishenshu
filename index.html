@@ -39,6 +39,10 @@
   .ev.user{color:#7fb0a0;border-color:#4a7265;background:rgba(95,144,130,.1);}
   .ev.astro{color:#9db3e0;border-color:#4a5c8a;background:rgba(90,110,170,.1);}
   .ev.custom{color:#d08573;border-color:#8a4a3c;background:rgba(198,85,64,.1);}
+  .ev.modern{color:#b09ad8;border-color:#6a5a8a;background:rgba(140,110,190,.1);}
+  #shenInfo{margin-top:12px;width:100%;border:1px solid var(--panel-border);border-left:3px solid #6a5a8a;
+    background:rgba(10,14,24,.5);border-radius:2px;padding:12px 14px;font-size:12.5px;line-height:1.95;color:var(--white-dim);}
+  #shenInfo .sn{font-family:"Noto Serif TC",serif;font-weight:700;color:var(--star);letter-spacing:2px;margin-right:8px;}
 
   .grid{display:grid;grid-template-columns:330px 1fr;gap:26px;align-items:start;}
   @media (max-width:880px){.grid{grid-template-columns:1fr;}}
@@ -104,6 +108,23 @@
   .step .txt{flex:1;min-width:200px;color:var(--white-dim);}
   .step .txt b{color:var(--star);font-weight:500;}
 
+  .weights{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 22px;padding-top:10px;}
+  .w-item label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:4px;letter-spacing:.5px;}
+  .w-item label b{color:var(--gold);font-family:"Space Mono",monospace;font-weight:400;}
+  .w-item input[type=range]{width:100%;accent-color:#c9a227;}
+  .mini-btn,.mini-btn2{font-family:"Noto Serif TC",serif;letter-spacing:2px;font-size:13px;padding:8px 16px;border-radius:2px;cursor:pointer;}
+  .mini-btn{background:none;border:1px solid var(--gold-soft);color:var(--gold);}
+  .mini-btn2{background:linear-gradient(160deg,#d8b23a,var(--gold-soft));color:#171106;border:none;font-weight:700;}
+  .bt-controls{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+  .bt-controls .field{margin:0;}
+  .bt-controls .field input{width:110px;}
+  .bt-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .bt-table th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:500;letter-spacing:1px;padding:8px 6px;border-bottom:1px solid var(--panel-border);text-align:left;font-size:11px;z-index:1;}
+  .bt-table td{padding:7px 6px;border-bottom:1px dashed rgba(42,53,84,.5);color:var(--white-dim);white-space:nowrap;}
+  .bt-table tr{cursor:pointer;}
+  .bt-table tr:hover td{background:rgba(201,162,39,.06);}
+  #btChart svg{width:100%;height:auto;}
+  #btTableWrap{border:1px solid var(--panel-border);border-radius:2px;}
   footer{margin-top:36px;border-top:1px solid var(--panel-border);padding-top:16px;font-size:12px;color:var(--muted);line-height:2;}
 
   @media (max-width:560px){
@@ -134,6 +155,7 @@
     <span class="ev guji">古籍明文</span><span>《太乙淘金歌》《太乙統宗大全》整理文獻</span>
     <span class="ev user">使用者裁定</span><span>歲首、積年錨點等你拍板的參數</span>
     <span class="ev astro">天文計算</span><span>可驗證的曆算</span>
+    <span class="ev modern">現代整理</span><span>多源一致但未對原典掃描本</span>
     <span class="ev custom">自訂待考</span><span>尚無文獻依據、可插拔替換</span>
   </div>
 
@@ -168,6 +190,7 @@
           <span><span class="dot" style="background:#7fb0a0;border-radius:1px;"></span>主大／主參將（方塊）</span>
           <span><span class="dot" style="background:#d08573;border-radius:1px;"></span>客大／客參將（方塊）</span>
         </div>
+        <div id="shenInfo">點擊式盤任一宮位，查看該神性情與所主之事。</div>
       </div>
     </div>
   </div>
@@ -186,6 +209,32 @@
     <div id="scoreBox"></div>
   </div>
 
+  <details class="audit" style="margin-bottom:18px;">
+    <summary>評 分 權 重 調 整（自訂模型・即時重算）</summary>
+    <div class="audit-body">
+      <div id="weightsBox" class="weights"></div>
+      <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <button type="button" id="wReset" class="mini-btn">還原預設</button>
+        <span style="font-size:11px;color:var(--muted);">拖動即時重算當前局與回測；權重屬自訂模型，非古籍內容。</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="panel" style="margin-bottom:18px;">
+    <h2>歷 史 回 測 · 逐 年 掃 描</h2>
+    <div class="bt-controls">
+      <div class="field"><label>起始年</label><input type="number" id="btStart" value="1950" min="1628" max="2145"></div>
+      <div class="field"><label>結束年</label><input type="number" id="btEnd" value="2050" min="1628" max="2145"></div>
+      <button type="button" id="btRun" class="mini-btn2">執行回測</button>
+    </div>
+    <div id="btErr" style="display:none;color:#d08573;font-size:12.5px;margin-top:10px;"></div>
+    <div id="btChart" style="margin-top:16px;"></div>
+    <div id="btLegend" style="display:none;font-size:11px;color:var(--muted);margin-top:6px;line-height:1.9;"></div>
+    <div id="btTableWrap" style="margin-top:12px;max-height:340px;overflow:auto;display:none;">
+      <table id="btTable" class="bt-table"></table>
+    </div>
+  </div>
+
   <details class="audit" open>
     <summary>演 算 步 驟 全 紀 錄（可稽核）</summary>
     <div class="audit-body" id="auditBody"></div>
@@ -199,6 +248,7 @@
     ・四將起法、十六宮五行、掩迫擊關囚格局定義與太微算專論：依《太乙金鏡式經》《太乙統宗大全》《武經總要·太乙術》整理文獻（古籍明文）。<br>
     ・格局判定之「前＝順行方向下一格、後＝順行方向上一格」與「辰／宮以相鄰格屬性判別」為使用者裁定。附帶推論：太乙十六宮編號恆為奇數正宮，相鄰格必為地支間神，故現行規則下擊與迫僅會觸發「辰」型，「宮」型邏輯已實作但數學上不可達。<br>
     ・綜合評分之權重（基礎分係數、格局加減分、掩之否決門）為自訂模型，非古籍內容，可於原始碼 SCHOOLS 配置調整。<br>
+    ・十六神性情（得名由來與所主之事）：多個獨立來源一致轉載之古文簡釋，標為現代整理；巽宮之神依使用者裁定採古名「大炅」（部分文獻作「大光明」，同義轉寫）。<br>
     ・始擊推進未套用乾坤重留（文獻未提及，按字面實作純推進）。本工具供術數研究與學習用途。
   </footer>
 </div>
@@ -259,7 +309,14 @@ function jdeToLocalJDN(jde){const g=gregorianFromJDN(Math.floor(jde+0.5));
   const jdUT=jde-deltaT(g.year+(g.month-0.5)/12)/86400;
   return Math.floor(jdUT+8/24+0.5);}
 function winterSolsticeJDE(y){return solarTermJDE(270,jdFromGregorian(y,12,21.5));}
+const _cnyCache=new Map();
 function chineseNewYearJDN(Y){
+  if(_cnyCache.has(Y))return _cnyCache.get(Y);
+  const v=_chineseNewYearJDNRaw(Y);
+  _cnyCache.set(Y,v);
+  return v;
+}
+function _chineseNewYearJDNRaw(Y){
   const w1=jdeToLocalJDN(winterSolsticeJDE(Y-1)),w2=jdeToLocalJDN(winterSolsticeJDE(Y));
   const kStart=Math.floor((jdFromGregorian(Y-1,11,1)-2451550.09766)/29.530588861)-1;
   const moons=[];for(let k=kStart;k<kStart+17;k++)moons.push(jdeToLocalJDN(newMoonJDE(k)));
@@ -286,15 +343,24 @@ function yearGanzhi(ly){const i=((ly-4)%60+60)%60;return{gz:STEMS[i%10]+BRANCHES
 // ============================================================
 // 太乙資料層與流派配置（插件式）
 // ============================================================
+// 十六神：布局為古籍明文；性情（得名由來/所主之事）為現代整理（多源一致轉載之古文，未對原典掃描本）
 const P16=[
-  {n:1,shen:"地主",zhi:"子",type:"正"},{n:2,shen:"陽德",zhi:"丑",type:"間"},
-  {n:3,shen:"和德",zhi:"艮",type:"正"},{n:4,shen:"呂申",zhi:"寅",type:"間"},
-  {n:5,shen:"高叢",zhi:"卯",type:"正"},{n:6,shen:"太陽",zhi:"辰",type:"間"},
-  {n:7,shen:"大光明",zhi:"巽",type:"正"},{n:8,shen:"大神",zhi:"巳",type:"間"},
-  {n:9,shen:"大威",zhi:"午",type:"正"},{n:10,shen:"天道",zhi:"未",type:"間"},
-  {n:11,shen:"大武",zhi:"坤",type:"正"},{n:12,shen:"武德",zhi:"申",type:"間"},
-  {n:13,shen:"太簇",zhi:"酉",type:"正"},{n:14,shen:"陰主",zhi:"戌",type:"間"},
-  {n:15,shen:"陰德",zhi:"乾",type:"正"},{n:16,shen:"大義",zhi:"亥",type:"間"}
+  {n:1,shen:"地主",zhi:"子",type:"正",yi:"建子之月陽氣初發，萬物陰生",zhu:"動搖言語事"},
+  {n:2,shen:"陽德",zhi:"丑",type:"間",yi:"建丑之月二陽用事，布育萬物",zhu:"施恩育物事"},
+  {n:3,shen:"和德",zhi:"艮",type:"正",yi:"春冬將交陰陽氣合，群物方生",zhu:"和集成就事"},
+  {n:4,shen:"呂申",zhi:"寅",type:"間",yi:"建寅之月陽育大申，草木甲拆",zhu:"運用主宰事"},
+  {n:5,shen:"高叢",zhi:"卯",type:"正",yi:"建卯之月萬物皆出，自地叢生",zhu:"發揮事"},
+  {n:6,shen:"太陽",zhi:"辰",type:"間",yi:"建辰之月雷出震勢，陽氣大盛",zhu:"危會兵曳事"},
+  {n:7,shen:"大炅",zhi:"巽",type:"正",yi:"春夏將交，陽氣炎皓",zhu:"申命號令事"},
+  {n:8,shen:"大神",zhi:"巳",type:"間",yi:"建巳之月少陰用事，陰陽不測",zhu:"毀拆破廢事"},
+  {n:9,shen:"大威",zhi:"午",type:"正",yi:"建午之月陽附陰生，刑暴始行",zhu:"光明威烈事"},
+  {n:10,shen:"天道",zhi:"未",type:"間",yi:"建未之月火能生土，土王於未",zhu:"陰私事"},
+  {n:11,shen:"大武",zhi:"坤",type:"正",yi:"夏秋將交陰氣施令，殺傷萬物",zhu:"刑罰事"},
+  {n:12,shen:"武德",zhi:"申",type:"間",yi:"建申之月萬物欲死，薺麥將生",zhu:"傳送遷移事"},
+  {n:13,shen:"太簇",zhi:"酉",type:"正",yi:"建酉之月萬物皆成，有大品簇",zhu:"更易肅殺事"},
+  {n:14,shen:"陰主",zhi:"戌",type:"間",yi:"建戌之月陽氣不長，陰氣用事",zhu:"危期兵喪事"},
+  {n:15,shen:"陰德",zhi:"乾",type:"正",yi:"秋冬將交陰前生陽，大有其情",zhu:"命令事"},
+  {n:16,shen:"大義",zhi:"亥",type:"間",yi:"建亥之月萬物懷垢，群陽欲盡",zhu:"計謀廢棄事"}
 ];
 const pName=n=>P16[n-1].shen+"("+P16[n-1].zhi+")";
 
@@ -411,21 +477,21 @@ function compute(year,month,day,school){
   const isGuaCell=n=>[3,7,11,15].includes(n);
   const patterns=[];
   if(shiji===tInfo.p16){
-    patterns.push({name:"掩",sev:"凶",desc:`始擊臨太乙宮（${pName(tInfo.p16)}）——掩襲劫殺之象，陰盛陽衰、臣張君弱，客方佔絕對優勢，利發動奇襲`});
+    patterns.push({name:"掩",sev:"凶",desc:`始擊臨太乙宮（${pName(tInfo.p16)}）——掩襲劫殺之象，陰盛陽衰、臣張君弱，客方佔絕對優勢，利發動奇襲。所臨${P16[tInfo.p16-1].shen}主${P16[tInfo.p16-1].zhu}`});
   }
   if(shiji===cw(tInfo.p16)){
     const tp=isGuaCell(shiji)?"外宮擊（宮位）":"前擊（辰位，災急疾）";
-    patterns.push({name:"擊",sev:"警",desc:`始擊在太乙順行前方一格（${pName(shiji)}）——${tp}，臣凌君卑、將相相伐之象`});
+    patterns.push({name:"擊",sev:"警",desc:`始擊在太乙順行前方一格（${pName(shiji)}）——${tp}，臣凌君卑、將相相伐之象。所臨${P16[shiji-1].shen}主${P16[shiji-1].zhu}`});
   }else if(shiji===ccw(tInfo.p16)){
     const tp=isGuaCell(shiji)?"內宮擊（宮位）":"後擊（辰位，災急疾）";
-    patterns.push({name:"擊",sev:"警",desc:`始擊在太乙順行後方一格（${pName(shiji)}）——${tp}，臣凌君卑、將相相伐之象`});
+    patterns.push({name:"擊",sev:"警",desc:`始擊在太乙順行後方一格（${pName(shiji)}）——${tp}，臣凌君卑、將相相伐之象。所臨${P16[shiji-1].shen}主${P16[shiji-1].zhu}`});
   }
   const gens=[["主大將",zhuDa],["主參將",zhuCan],["客大將",keDa],["客參將",keCan]];
   for(const[gl,gp]of gens){
     if(gp===cw(tInfo.p16)||gp===ccw(tInfo.p16)){
       const dir=gp===cw(tInfo.p16)?"外迫（順行前方）":"內迫（順行後方）";
       const tp=isGuaCell(gp)?"宮迫，災微緩":"辰迫，災急疾";
-      patterns.push({name:"迫",sev:"警",desc:`${gl}臨太乙${dir}一格（${pName(gp)}）——${tp}，上下相凌、臣逼君之象`});
+      patterns.push({name:"迫",sev:"警",desc:`${gl}臨太乙${dir}一格（${pName(gp)}）——${tp}，上下相凌、臣逼君之象。所臨${P16[gp-1].shen}主${P16[gp-1].zhu}`});
     }
   }
   function guanJudge(){
@@ -436,16 +502,16 @@ function compute(year,month,day,school){
   }
   if(zhuDa===keDa){
     const gj=guanJudge();
-    patterns.push({name:"關",sev:"判",desc:`主客大將同宮（${pName(zhuDa)}）——兩軍主力正面對峙；五行裁決：${gj.d} → <b>${gj.r}</b>`,guan:gj.r});
+    patterns.push({name:"關",sev:"判",desc:`主客大將同宮（${pName(zhuDa)}）——兩軍主力正面對峙；五行裁決：${gj.d} → <b>${gj.r}</b>。所會${P16[zhuDa-1].shen}主${P16[zhuDa-1].zhu}`,guan:gj.r});
   }
   if(zhuCan===keCan){
     const gj=guanJudge();
-    patterns.push({name:"關",sev:"判",desc:`主客參將同宮（${pName(zhuCan)}）——偏師相持；五行裁決：${gj.d} → <b>${gj.r}</b>`,guan:gj.r});
+    patterns.push({name:"關",sev:"判",desc:`主客參將同宮（${pName(zhuCan)}）——偏師相持；五行裁決：${gj.d} → <b>${gj.r}</b>。所會${P16[zhuCan-1].shen}主${P16[zhuCan-1].zhu}`,guan:gj.r});
   }
   for(const[gl,gp]of[["主大將",zhuDa],["客大將",keDa]]){
     if(gp===tInfo.p16){
       const jue=tInfo.p16===S.patterns.jueYang?"，且太乙居絕陽之地（午），人君有災、政權危殆":(tInfo.p16===S.patterns.jueYin?"，且太乙居絕陰之地（子），人君有災、政權危殆":"");
-      patterns.push({name:"囚",sev:jue?"凶":"警",desc:`${gl}與太乙同宮（${pName(gp)}）——篡戮禁錮、功高震主之象${jue}`,jue:!!jue});
+      patterns.push({name:"囚",sev:jue?"凶":"警",desc:`${gl}與太乙同宮（${pName(gp)}）——篡戮禁錮、功高震主之象${jue}。所臨${P16[gp-1].shen}主${P16[gp-1].zhu}`,jue:!!jue});
     }
   }
   if(patterns.length)push(`格局偵測：觸發 <b>${patterns.map(p=>p.name).join("、")}</b>（詳見格局判定區；前後方向與辰宮判別依使用者裁定）`,"guji");
@@ -496,12 +562,12 @@ function buildBoard(){
     const isZheng=P16[i-1].type==="正";
     h+=`<path id="sec${i}" d="${sectorPath(i,R_IN,R_OUT)}"
       fill="${isZheng?"rgba(201,162,39,0.055)":"rgba(18,26,46,0.55)"}"
-      stroke="#2a3554" stroke-width="1"/>`;
+      stroke="#2a3554" stroke-width="1" style="cursor:pointer;"/>`;
     // 兩行文字疊在同一錨點：神名在上、支/編號在下，避免徑向錯位造成重疊
     const[tx,ty]=polar(i,midR);
-    h+=`<text x="${tx}" y="${ty-4}" text-anchor="middle" dominant-baseline="middle"
+    h+=`<text x="${tx}" y="${ty-4}" text-anchor="middle" dominant-baseline="middle" pointer-events="none"
       style="font-family:'Noto Serif TC',serif;font-size:${P16[i-1].shen.length>=3?12.5:14.5}px;font-weight:700;fill:${isZheng?"#d8c88f":"#8a93b0"};">${P16[i-1].shen}</text>`;
-    h+=`<text x="${tx}" y="${ty+13}" text-anchor="middle" dominant-baseline="middle"
+    h+=`<text x="${tx}" y="${ty+13}" text-anchor="middle" dominant-baseline="middle" pointer-events="none"
       style="font-family:'Noto Sans TC',sans-serif;font-size:9.5px;fill:#7c86a6;">${P16[i-1].zhi}・${i}${isZheng?"":"・間"}</text>`;
   }
   h+=`<circle cx="${CX}" cy="${CY}" r="${R_IN}" fill="none" stroke="#2a3554" stroke-width="1"/>`;
@@ -511,6 +577,18 @@ function buildBoard(){
   h+=`<text id="hubBot" x="${CX}" y="${CY+28}" text-anchor="middle" style="font-family:'Noto Sans TC',sans-serif;font-size:11px;fill:#b9c0d4;"></text>`;
   h+=`<g id="markers"></g>`;
   svg.innerHTML=h;
+  for(let i=1;i<=16;i++){
+    document.getElementById("sec"+i).addEventListener("click",()=>showShenInfo(i));
+  }
+}
+
+function showShenInfo(i){
+  const p=P16[i-1];
+  const wx=SCHOOLS.taojin.wuxing.map[i];
+  document.getElementById("shenInfo").innerHTML=
+    `<span class="sn">${p.shen}（${p.zhi}宮・第${i}位・${p.type==="正"?"八正宮":"八間神"}・五行屬${wx}）</span>`+
+    `<span class="ev modern">現代整理</span><br>`+
+    `得名：${p.yi}，故曰${p.shen}。<br>所主：<b style="color:var(--star);font-weight:500;">${p.zhu}</b>`;
 }
 
 function polarJ(i,r,degOff){const a=(-90+(i-1)*22.5+degOff)*RAD;return[CX+r*Math.cos(a),CY+r*Math.sin(a)];}
@@ -559,7 +637,7 @@ function drawMarkers(r){
 // ============================================================
 // UI 渲染
 // ============================================================
-const EV_LABEL={guji:["guji","古籍明文"],user:["user","使用者裁定"],astro:["astro","天文計算"],custom:["custom","自訂待考"]};
+const EV_LABEL={guji:["guji","古籍明文"],user:["user","使用者裁定"],astro:["astro","天文計算"],custom:["custom","自訂待考"],modern:["modern","現代整理"]};
 const evBadge=ev=>`<span class="ev ${EV_LABEL[ev][0]}">${EV_LABEL[ev][1]}</span>`;
 const statCard=(k,v,cls,ev)=>`<div class="stat"><div class="k">${k}${ev?evBadge(ev):""}</div><div class="v ${cls||""}">${v}</div></div>`;
 
@@ -592,7 +670,7 @@ function render(r){
   document.getElementById("patternsBox").innerHTML=r.patterns.length?
     r.patterns.map(p=>`<div class="pat-item" style="border-left-color:${sevColor[p.sev]};">
       <span class="pn" style="color:${sevColor[p.sev]};">${p.name}【${p.sev}】</span>
-      <span class="pd">${p.desc}</span>${evBadge("guji")}</div>`).join("")
+      <span class="pd">${p.desc}</span>${evBadge("guji")}</div>`).join("")+`<div style="font-size:10.5px;color:var(--muted);margin-top:6px;">格局定義為古籍明文；文末「所臨／所會之神主某事」為現代整理之神性註解。</div>`
     :`<div style="color:var(--muted);font-size:13px;line-height:1.9;">本局未觸發掩、迫、擊、關、囚特殊格局。${evBadge("guji")}</div>`;
 
   // 綜合評分區
@@ -650,7 +728,128 @@ document.getElementById("calcBtn").addEventListener("click",runCalc);
 for(const id of["inYear","inMonth","inDay"]){
   document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")runCalc();});
 }
+
+// ============================================================
+// 評分權重調整（自訂模型）
+// ============================================================
+const DEFAULT_SCORING=JSON.parse(JSON.stringify(SCHOOLS.taojin.scoring));
+const WEIGHT_DEFS=[
+  ["wDiff","基礎分係數 ×(主算−客算)",1,10,1],
+  ["yanPenalty","掩：扣分",-100,0,5],
+  ["yanCap","掩：否決門上限",-100,0,5],
+  ["jiPenalty","擊：扣分",-60,0,5],
+  ["poChen","迫（辰迫）：扣分",-60,0,5],
+  ["poGong","迫（宮迫）：扣分",-60,0,5],
+  ["guanWin","關：勝方加減分",0,60,5],
+  ["qiuPenalty","囚：扣分",-60,0,5],
+  ["qiuJuePenalty","囚（絕地）：扣分",-100,0,5],
+  ["taiweiKeBonus","客太微：加分",0,30,5]
+];
+let lastBt=null;
+function buildWeightsUI(){
+  const box=document.getElementById("weightsBox");
+  box.innerHTML=WEIGHT_DEFS.map(([k,label,min,max,step])=>`
+    <div class="w-item"><label><span>${label}</span><b id="wv_${k}">${SCHOOLS.taojin.scoring[k]}</b></label>
+    <input type="range" id="w_${k}" min="${min}" max="${max}" step="${step}" value="${SCHOOLS.taojin.scoring[k]}"></div>`).join("");
+  for(const[k]of WEIGHT_DEFS){
+    document.getElementById("w_"+k).addEventListener("input",e=>{
+      SCHOOLS.taojin.scoring[k]=Number(e.target.value);
+      document.getElementById("wv_"+k).textContent=e.target.value;
+      runCalc();
+      if(lastBt)runBacktest(lastBt[0],lastBt[1]);
+    });
+  }
+}
+document.getElementById("wReset").addEventListener("click",()=>{
+  Object.assign(SCHOOLS.taojin.scoring,JSON.parse(JSON.stringify(DEFAULT_SCORING)));
+  buildWeightsUI();
+  runCalc();
+  if(lastBt)runBacktest(lastBt[0],lastBt[1]);
+});
+
+// ============================================================
+// 歷史回測：逐年掃描
+// ============================================================
+function runBacktest(s,e){
+  const err=document.getElementById("btErr");
+  err.style.display="none";
+  try{
+    if(!s||!e)throw new Error("請輸入起訖年份");
+    if(s<1628||e>2145)throw new Error("年份需介於 1628–2145");
+    if(e<s)throw new Error("結束年需不早於起始年");
+    if(e-s>300)throw new Error("單次回測範圍請勿超過 300 年");
+    const rows=[];
+    for(let y=s;y<=e;y++)rows.push(compute(y,7,1,"taojin"));
+    lastBt=[s,e];
+    renderBtChart(rows);
+    renderBtTable(rows);
+  }catch(ex){err.textContent="⚠ "+ex.message;err.style.display="block";}
+}
+document.getElementById("btRun").addEventListener("click",()=>{
+  runBacktest(parseInt(document.getElementById("btStart").value),parseInt(document.getElementById("btEnd").value));
+});
+for(const id of["btStart","btEnd"]){
+  document.getElementById(id).addEventListener("keydown",e=>{
+    if(e.key==="Enter")document.getElementById("btRun").click();
+  });
+}
+
+function renderBtChart(rows){
+  const n=rows.length,W=1000,H=308,padL=36,padR=8,base=126,scale=1.02;
+  const plotW=W-padL-padR;
+  const bw=Math.max(1,plotW/n-1);
+  const xFor=i=>padL+plotW*(i+0.5)/n;
+  let h=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  for(const g of[100,50,0,-50,-100]){
+    const y=base-g*scale;
+    h+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(42,53,84,${g===0?0.9:0.45})" stroke-width="1"/>`;
+    h+=`<text x="${padL-4}" y="${y+3}" text-anchor="end" font-size="9" fill="#7c86a6">${g>0?"+":""}${g}</text>`;
+  }
+  rows.forEach((r,i)=>{
+    const x=xFor(i)-bw/2;
+    const col=r.score>=20?"#5f9082":(r.score<=-20?"#c65540":"#c9a227");
+    const y1=base-r.score*scale;
+    h+=`<rect x="${x}" y="${Math.min(base,y1)}" width="${bw}" height="${Math.max(1.5,Math.abs(y1-base))}" fill="${col}" opacity="0.85"><title>${r.year} ${r.gz.gz}年 第${r.ju}局：${r.score>0?"+":""}${r.score}（${r.grade}）${r.patterns.length?"｜格局："+r.patterns.map(p=>p.name).join("、"):""}</title></rect>`;
+    const names=r.patterns.map(p=>p.name),cx=xFor(i);
+    if(names.includes("掩")||r.patterns.some(p=>p.name==="囚"&&p.jue))h+=`<circle cx="${cx}" cy="252" r="2.6" fill="#c65540"/>`;
+    else if(names.includes("囚"))h+=`<circle cx="${cx}" cy="252" r="2.6" fill="#c65540" opacity="0.5"/>`;
+    if(names.includes("擊")||names.includes("關"))h+=`<circle cx="${cx}" cy="266" r="2.4" fill="#c9a227" opacity="0.8"/>`;
+    if(names.includes("迫"))h+=`<circle cx="${cx}" cy="280" r="2" fill="#7c86a6" opacity="0.6"/>`;
+  });
+  const step=Math.max(1,Math.ceil(n/12));
+  rows.forEach((r,i)=>{
+    if(i%step===0)h+=`<text x="${xFor(i)}" y="${H-4}" text-anchor="middle" font-size="9" fill="#7c86a6">${r.year}</text>`;
+  });
+  h+="</svg>";
+  document.getElementById("btChart").innerHTML=h;
+  const lg=document.getElementById("btLegend");
+  lg.style.display="block";
+  const stats={掩:0,迫:0,擊:0,關:0,囚:0};let none=0;
+  rows.forEach(r=>{if(!r.patterns.length)none++;const seen=new Set();r.patterns.forEach(p=>{if(!seen.has(p.name)){stats[p.name]++;seen.add(p.name);}});});
+  lg.innerHTML=`格局軌（圖下三排圓點）：<span style="color:#c65540;">●</span> 掩／囚　<span style="color:#c9a227;">●</span> 擊／關　<span style="color:#7c86a6;">●</span> 迫｜本區間 ${rows.length} 年：掩${stats.掩}・迫${stats.迫}・擊${stats.擊}・關${stats.關}・囚${stats.囚}・無格局${none}｜長條：綠≥+20 利主、紅≤−20 利客、金為均勢。點擊下表任一列可載入該年詳盤。`;
+}
+
+function renderBtTable(rows){
+  document.getElementById("btTableWrap").style.display="block";
+  document.getElementById("btTable").innerHTML=
+    `<tr><th>年</th><th>干支</th><th>局</th><th>太乙</th><th>主算</th><th>客算</th><th>格局</th><th>評分</th></tr>`+
+    rows.map(r=>`<tr data-y="${r.year}"><td>${r.year}</td><td>${r.gz.gz}</td><td>${r.ju}</td><td>${r.taiyiGua}</td><td>${r.zhu.total}${r.zhu.total===10?"太微":""}</td><td>${r.ke.total}${r.ke.total===10?"太微":""}</td><td>${r.patterns.map(p=>p.name).join("、")||"—"}</td><td style="color:${r.score>=20?"#5f9082":(r.score<=-20?"#c65540":"#c9a227")};font-family:'Space Mono',monospace;">${r.score>0?"+":""}${r.score}</td></tr>`).join("");
+}
+document.getElementById("btTable").addEventListener("click",e=>{
+  let el=e.target;
+  while(el&&!(el.dataset&&el.dataset.y))el=el.parentElement;
+  if(el&&el.dataset.y){
+    document.getElementById("inYear").value=el.dataset.y;
+    document.getElementById("inMonth").value="7";
+    document.getElementById("inDay").value="1";
+    runCalc();
+    if(typeof window!=="undefined"&&window.scrollTo)window.scrollTo({top:0,behavior:"smooth"});
+  }
+});
+
+buildWeightsUI();
 runCalc();
+runBacktest(1950,2050);
 </script>
 </body>
 </html>
