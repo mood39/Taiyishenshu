@@ -43,6 +43,11 @@
   #shenInfo{margin-top:12px;width:100%;border:1px solid var(--panel-border);border-left:3px solid #6a5a8a;
     background:rgba(10,14,24,.5);border-radius:2px;padding:12px 14px;font-size:12.5px;line-height:1.95;color:var(--white-dim);}
   #shenInfo .sn{font-family:"Noto Serif TC",serif;font-weight:700;color:var(--star);letter-spacing:2px;margin-right:8px;}
+  #summaryCard{border:1px solid var(--gold-soft);background:linear-gradient(160deg,rgba(201,162,39,.09),rgba(18,26,46,.7));
+    border-radius:3px;padding:18px 20px;margin-bottom:18px;}
+  #summaryCard .headline{font-family:"Noto Serif TC",serif;font-weight:900;font-size:19px;letter-spacing:2px;color:var(--gold);margin-bottom:8px;}
+  #summaryCard ul{margin:0;padding-left:20px;line-height:2;font-size:13.5px;color:var(--white-dim);}
+  #summaryCard li b{color:var(--star);font-weight:500;}
 
   .grid{display:grid;grid-template-columns:330px 1fr;gap:26px;align-items:start;}
   @media (max-width:880px){.grid{grid-template-columns:1fr;}}
@@ -196,6 +201,7 @@
   </div>
 
   <div id="runInfo"></div>
+  <div id="summaryCard"></div>
   <div class="stats" id="statGrid"></div>
   <div class="interp" id="interp"></div>
 
@@ -219,6 +225,14 @@
       </div>
     </div>
   </details>
+
+  <div class="panel" style="margin-bottom:18px;">
+    <h2>五 維 主 客 對 比 · 雷 達</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:center;">
+      <div id="radarBox" style="flex:1 1 300px;max-width:430px;"></div>
+      <div id="radarNote" style="flex:1 1 230px;font-size:12px;color:var(--muted);line-height:2.1;"></div>
+    </div>
+  </div>
 
   <div class="panel" style="margin-bottom:18px;">
     <h2>歷 史 回 測 · 逐 年 掃 描</h2>
@@ -249,6 +263,7 @@
     ・格局判定之「前＝順行方向下一格、後＝順行方向上一格」與「辰／宮以相鄰格屬性判別」為使用者裁定。附帶推論：太乙十六宮編號恆為奇數正宮，相鄰格必為地支間神，故現行規則下擊與迫僅會觸發「辰」型，「宮」型邏輯已實作但數學上不可達。<br>
     ・綜合評分之權重（基礎分係數、格局加減分、掩之否決門）為自訂模型，非古籍內容，可於原始碼 SCHOOLS 配置調整。<br>
     ・十六神性情（得名由來與所主之事）：多個獨立來源一致轉載之古文簡釋，標為現代整理；巽宮之神依使用者裁定採古名「大炅」（部分文獻作「大光明」，同義轉寫）。<br>
+    ・五維雷達之「格局淨勢」換算與「神性吉凶」十六神分數表為自訂模型；白話總結卡由古籍明文判定組裝；歷史分位數以 1950–2050 區間為基準。<br>
     ・始擊推進未套用乾坤重留（文獻未提及，按字面實作純推進）。本工具供術數研究與學習用途。
   </footer>
 </div>
@@ -385,6 +400,8 @@ const SCHOOLS={
     wuxing:{map:{1:"水",2:"水",16:"水",3:"木",4:"木",5:"木",6:"木",7:"火",8:"火",9:"火",10:"火",11:"金",12:"金",13:"金",14:"金",15:"土"},
       keTable:{"木":"土","土":"水","水":"火","火":"金","金":"木"},ev:"guji"},
     patterns:{jueYang:9,jueYin:1,ev:"guji"}, // 絕陽＝午(大威9)、絕陰＝子(地主1)
+    shenScore:{map:{1:45,2:75,3:80,4:65,5:65,6:30,7:60,8:20,9:50,10:40,11:25,12:50,13:30,14:20,15:60,16:35},
+      ev:"custom"}, // 十六神吉凶分（0凶~100吉，依所主之事語義定分，自訂待考）
     scoring:{ // 綜合評分權重（自訂待考，可調）
       wDiff:6,yanPenalty:-60,yanCap:-50,jiPenalty:-20,
       poChen:-20,poGong:-10,guanWin:25,qiuPenalty:-20,qiuJuePenalty:-40,taiweiKeBonus:10,
@@ -520,6 +537,7 @@ function compute(year,month,day,school){
   // 綜合評分（主方視角 −100～＋100；權重為自訂模型）
   const W=S.scoring;
   let score=(zhu.total-ke.total)*W.wDiff;
+  let proZhu=0,proKe=0; // 格局淨勢累計（雷達用）
   const scoreLog=[`基礎分＝(主算${zhu.total}−客算${ke.total})×${W.wDiff}＝${score>0?"+":""}${score}`];
   for(const pt of patterns){
     let adj=0;
@@ -528,16 +546,31 @@ function compute(year,month,day,school){
     else if(pt.name==="迫")adj=pt.desc.includes("宮迫")?W.poGong:W.poChen;
     else if(pt.name==="關")adj=pt.guan==="主勝"?W.guanWin:(pt.guan==="客勝"?-W.guanWin:0);
     else if(pt.name==="囚")adj=pt.jue?W.qiuJuePenalty:W.qiuPenalty;
-    if(adj!==0){score+=adj;scoreLog.push(`格局「${pt.name}」修正 ${adj>0?"+":""}${adj}`);}
+    if(adj!==0){score+=adj;if(adj>0)proZhu+=adj;else proKe+=-adj;scoreLog.push(`格局「${pt.name}」修正 ${adj>0?"+":""}${adj}`);}
   }
   if(zhu.total===10)scoreLog.push(`主太微：宜守不宜攻（行動限制標記，不加減分）`);
-  if(ke.total===10){score+=W.taiweiKeBonus;scoreLog.push(`客太微：客攻勢自止 +${W.taiweiKeBonus}`);}
+  if(ke.total===10){score+=W.taiweiKeBonus;proZhu+=W.taiweiKeBonus;scoreLog.push(`客太微：客攻勢自止 +${W.taiweiKeBonus}`);}
   if(patterns.some(p=>p.name==="掩")&&score>W.yanCap){score=W.yanCap;scoreLog.push(`掩為否決門：分數強制壓至 ${W.yanCap}`);}
   score=Math.max(-100,Math.min(100,score));
   const grade=score>=60?"大利主":score>=20?"利主":score>-20?"均勢膠著":score>-60?"利客":"大利客／主凶";
   push(`綜合評分（主方視角）：${scoreLog.join("；")} → 總分 <b>${score>0?"+":""}${score}（${grade}）</b>〔權重為自訂模型，於流派配置 scoring 區可調〕`,"custom");
 
-  return{year,month,day,cnyStr,lunarYear,gz,jiNian,ju,yuanIdx,taiyiId,taiyiP16:tInfo.p16,taiyiGua:tInfo.gua,stayYear,liName,jishen,wenchang,shiji,zhu,ke,zhuDa,zhuCan,keDa,keCan,patterns,score,grade,scoreLog,steps};
+  // 五維雷達（主客各成一多邊形）
+  const clamp01=v=>Math.max(0,Math.min(100,Math.round(v)));
+  const zwx=WX[wenchang],kwx=WX[shiji];
+  let wxZhu=50,wxKe=50;
+  if(KE[zwx]===kwx){wxZhu=80;wxKe=20;}else if(KE[kwx]===zwx){wxZhu=20;wxKe=80;}
+  const SSm=S.shenScore.map;
+  const radar=[
+    {name:"算數強度",zhu:clamp01(zhu.total/16*100),ke:clamp01(ke.total/16*100),ev:"guji"},
+    {name:"五行生剋",zhu:wxZhu,ke:wxKe,ev:"guji"},
+    {name:"格局淨勢",zhu:clamp01(50+proZhu*0.8-proKe*0.4),ke:clamp01(50+proKe*0.8-proZhu*0.4),ev:"custom"},
+    {name:"行動自由",zhu:zhu.total===10?20:80,ke:ke.total===10?20:80,ev:"guji"},
+    {name:"神性吉凶",zhu:SSm[wenchang],ke:SSm[shiji],ev:"custom"}
+  ];
+  push(`五維雷達：算數強度（主客算/16）、五行生剋（克者80被克20）、格局淨勢（格局加減分拆分）、行動自由（太微算限制）、神性吉凶（文昌/始擊所臨之神分數）〔格局淨勢換算與神性分數表為自訂模型〕`,"custom");
+
+  return{year,month,day,cnyStr,lunarYear,gz,jiNian,ju,yuanIdx,taiyiId,taiyiP16:tInfo.p16,taiyiGua:tInfo.gua,stayYear,liName,jishen,wenchang,shiji,zhu,ke,zhuDa,zhuCan,keDa,keCan,patterns,score,grade,scoreLog,radar,steps};
 }
 
 // ============================================================
@@ -703,6 +736,8 @@ function render(r){
     `<span class="tag">局勢判讀</span>本年太乙駐 ${r.taiyiGua}宮（${pName(r.taiyiP16)}，${r.liName}之年）；主算 ${r.zhu.total}（${r.zhu.judge.t}，${r.zhu.judge.d}），客算 ${r.ke.total}（${r.ke.judge.t}，${r.ke.judge.d}）。${cmp}${patNote}
     <span style="color:var(--muted);font-size:12px;">〔長短算判定為古籍明文；本段綜合比較文字為現代整理表述，非古籍原文。〕</span>${warn}`;
 
+  renderSummary(r);
+  renderRadar(r);
   document.getElementById("auditBody").innerHTML=r.steps.map((s,i)=>
     `<div class="step"><span class="no">${String(i+1).padStart(2,"0")}</span><span class="txt">${s.txt}</span>${evBadge(s.ev)}</div>`).join("");
 
@@ -727,6 +762,73 @@ buildBoard();
 document.getElementById("calcBtn").addEventListener("click",runCalc);
 for(const id of["inYear","inMonth","inDay"]){
   document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")runCalc();});
+}
+
+// ============================================================
+// 白話總結卡（明文判定組裝）＋ 歷史分位數
+// ============================================================
+function percentileOf(score){
+  const scores=[];
+  for(let y=1950;y<=2050;y++)scores.push(compute(y,7,1,"taojin").score);
+  const below=scores.filter(x=>x<score).length,eq=scores.filter(x=>x===score).length;
+  return Math.round((below+eq*0.5)/scores.length*100);
+}
+function renderSummary(r){
+  const hasYan=r.patterns.some(p=>p.name==="掩");
+  let headline;
+  if(hasYan)headline="凶局：現掩襲之象，客方佔絕對優勢，主方切忌輕舉";
+  else headline={"大利主":"主方全面佔優之年","利主":"主方形勢有利之年","均勢膠著":"主客勢均，成敗繫於細節之年","利客":"客方形勢有利，主方宜守之年","大利客／主凶":"客方大優，主方非常之年"}[r.grade];
+  const tips=[];
+  tips.push(`主算 <b>${r.zhu.total}（${r.zhu.judge.t}）</b> 對 客算 <b>${r.ke.total}（${r.ke.judge.t}）</b>，太乙駐${r.taiyiGua}宮${r.liName}之年`);
+  const seen=new Set();
+  for(const p of r.patterns){
+    if(seen.has(p.name))continue;seen.add(p.name);
+    if(p.name==="掩")tips.push("<b>掩</b>：防突襲劫殺，此格為否決門，數值優勢失效");
+    else if(p.name==="擊")tips.push("<b>擊</b>：內部有下凌上、將相相伐之風險");
+    else if(p.name==="迫")tips.push("<b>迫</b>：權臣逼主、上下相凌（辰迫災急）");
+    else if(p.name==="關")tips.push(`<b>關</b>：兩軍對峙，五行裁決 ${p.guan}`);
+    else if(p.name==="囚")tips.push("<b>囚</b>：防功高震主、猜忌禁錮之變");
+    if(tips.length>=4)break;
+  }
+  if(r.zhu.total===10)tips.push("<b>主太微</b>：數滿則溢，宜固守、不可主動出擊");
+  if(r.ke.total===10)tips.push("<b>客太微</b>：對方攻勢將於極點自行衰竭");
+  const pct=percentileOf(r.score);
+  tips.push(`歷史定位：本年評分（${r.score>0?"+":""}${r.score}）高於 1950–2050 區間約 <b>${pct}%</b> 的年份`);
+  document.getElementById("summaryCard").innerHTML=
+    `<div class="headline">${headline}</div><ul>${tips.slice(0,5).map(t=>`<li>${t}</li>`).join("")}</ul>`;
+}
+
+// ============================================================
+// 五維雷達
+// ============================================================
+function renderRadar(r){
+  const cx=210,cy=172,R=118,n=r.radar.length;
+  const pt=(i,v)=>{const a=(-90+i*360/n)*RAD;const rr=R*v/100;return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)];};
+  let h=`<svg viewBox="0 0 420 344" style="width:100%;height:auto;">`;
+  for(const g of[25,50,75,100]){
+    const pts=[];for(let i=0;i<n;i++)pts.push(pt(i,g).join(","));
+    h+=`<polygon points="${pts.join(" ")}" fill="none" stroke="rgba(42,53,84,${g===100?0.9:0.5})" stroke-width="1"/>`;
+  }
+  for(let i=0;i<n;i++){
+    const[x,y]=pt(i,100);
+    h+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(42,53,84,0.5)"/>`;
+    const[lx,ly]=pt(i,116);
+    const anchor=Math.abs(lx-cx)<8?"middle":(lx>cx?"start":"end");
+    h+=`<text x="${lx}" y="${ly+(ly>cy?12:-4)}" text-anchor="${anchor}" font-size="12.5" fill="#b9c0d4" style="font-family:'Noto Serif TC',serif;letter-spacing:1px;">${r.radar[i].name}</text>`;
+  }
+  const poly=key=>r.radar.map((a,i)=>pt(i,a[key]).join(",")).join(" ");
+  h+=`<polygon points="${poly("ke")}" fill="rgba(198,85,64,0.2)" stroke="#c65540" stroke-width="1.8"/>`;
+  h+=`<polygon points="${poly("zhu")}" fill="rgba(95,144,130,0.24)" stroke="#5f9082" stroke-width="1.8"/>`;
+  for(let i=0;i<n;i++){
+    const[zx,zy]=pt(i,r.radar[i].zhu),[kx,ky]=pt(i,r.radar[i].ke);
+    h+=`<circle cx="${kx}" cy="${ky}" r="3" fill="#c65540"/><circle cx="${zx}" cy="${zy}" r="3" fill="#5f9082"/>`;
+  }
+  h+="</svg>";
+  document.getElementById("radarBox").innerHTML=h;
+  document.getElementById("radarNote").innerHTML=
+    `<span style="color:#5f9082;">■</span> 主方　<span style="color:#c65540;">■</span> 客方<br>`+
+    r.radar.map(a=>`${a.name}：<b style="color:#5f9082;">${a.zhu}</b> 對 <b style="color:#c65540;">${a.ke}</b> ${evBadge(a.ev)}`).join("<br>")+
+    `<br><span style="font-size:10.5px;">神性吉凶依十六神分數表（自訂待考，見 SCHOOLS 配置 shenScore）；格局淨勢由評分加減分換算。</span>`;
 }
 
 // ============================================================
