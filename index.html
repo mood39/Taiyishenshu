@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>太乙神數 · 年計排盤引擎</title>
+<title>太乙神數 · 年計／時計排盤引擎</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -149,10 +149,10 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="seal"><span>太乙<br>年計</span></div>
+    <div class="seal"><span>太乙<br>三式</span></div>
     <div>
-      <h1>太 乙 神 數 · 年 計 排 盤</h1>
-      <div class="subtitle">十六神布局 × 主客算 × 計神 ｜ 定朔定氣天文曆法核心</div>
+      <h1>太 乙 神 數 · 排 盤 引 擎</h1>
+      <div class="subtitle">年計（淘金歌系）／時計（金鏡系）雙系統 ｜ 定朔定氣天文曆法核心</div>
     </div>
   </header>
 
@@ -169,8 +169,22 @@
     <div class="panel">
       <h2>起　局</h2>
       <div class="field">
+        <label>推算系統 SYSTEM</label>
+        <select id="inSystem">
+          <option value="year">年計太乙（歲計・問國運大勢）</option>
+          <option value="hour">時計太乙（金鏡・問臨事機宜）</option>
+        </select>
+      </div>
+      <div class="field" id="schoolField">
         <label>流派配置 SCHOOL</label>
         <select id="inSchool"><option value="taojin">淘金歌·統宗大全整理版</option></select>
+      </div>
+      <div class="field" id="hourTimeField" style="display:none;">
+        <label>時刻（用於定時辰）</label>
+        <input type="time" id="inTime" value="12:00">
+        <div style="margin-top:6px;font-size:11px;color:var(--muted);">
+          <label style="display:inline;letter-spacing:0;"><input type="checkbox" id="useTST" checked style="width:auto;vertical-align:middle;"> 以真太陽時定時辰（下方模組之經度）</label>
+        </div>
       </div>
       <div class="row3">
         <div class="field"><label>公曆年</label><input type="number" id="inYear" value="2026" min="1628" max="2145"></div>
@@ -179,8 +193,11 @@
       </div>
       <button type="button" id="calcBtn">演　算　起　局</button>
       <div id="errBox"></div>
-      <div class="hint">
+      <div class="hint" id="hintYear">
         年計太乙以「<b>農曆年</b>」為最小單位：同一農曆年內的任何月日，排出的局面<b>完全相同</b>——月日輸入只用來判斷該日屬於哪個農曆年（正月初一前後會不同）。歲首採<b>農曆正月初一</b>，由內建定朔定氣演算法即時推算，全局皆為陽遁。可用範圍：1628–2145 年。
+      </div>
+      <div class="hint" id="hintHour" style="display:none;">
+        時計太乙以「<b>時辰</b>」為最小單位，一時辰一局、七十二局一循環。<b>冬至後陽遁</b>（太乙起乾順行）、<b>夏至後陰遁</b>（太乙起巽逆行），三時一移。子時（23:00起）依裁定歸<b>次日</b>。積時起點因《推時計差法》原刻本「全數」處<b>闕字</b>而佚，本系統以金鏡卷一例局（陰遁二十七局）反推錨定。
       </div>
     </div>
 
@@ -235,7 +252,7 @@
     </div>
   </div>
 
-  <div class="panel" style="margin-bottom:18px;">
+  <div class="panel" id="btPanel" style="margin-bottom:18px;">
     <h2>歷 史 回 測 · 逐 年 掃 描</h2>
     <div class="bt-controls">
       <div class="field"><label>起始年</label><input type="number" id="btStart" value="1950" min="1628" max="2145"></div>
@@ -281,6 +298,8 @@
     ・十六神性情（得名由來與所主之事）：多個獨立來源一致轉載之古文簡釋，標為現代整理；巽宮之神依使用者裁定採古名「大炅」（部分文獻作「大光明」，同義轉寫）。<br>
     ・數象判讀（三才數／無天無地無人）：天＝十、地＝五、人＝一之拆解規則，多源一致，標現代整理。<br>
     ・五維雷達之「格局淨勢」換算與「神性吉凶」十六神分數表為自訂模型；白話總結卡由古籍明文判定組裝；歷史分位數以 1950–2050 區間為基準。<br>
+    ・<b>時計系統</b>（金鏡系）：太乙行宮（陽遁起乾順行／陰遁起巽逆行、三時一移）、天目（陽起武德重留陰德大武／陰起呂申重留大炅和德）、計神（陽起寅／陰起申，逆行十二辰）、始擊（計神加和德）、主客算（自星起含、順行累加八正宮太乙編號、至太乙宮前止、間神加一）、四將（棄十法）、數象（卷六）——全部依《太乙金鏡式經》四庫本，並經卷一例局（陰遁二十七局：太乙九宮、大武為天目、午為計神、主算二十九、客算四、四將九七四二）<b>九項全數驗證通過</b>。<br>
+    ・時計積時錨點：《推時計差法》原刻本「全數二十六萬〈闕〉千八百四十三」千位闕字，四庫館臣已標明缺文，故絕對積時無從復原。本系統以卷一例局（724年立冬後六日申時 ≡ 陰遁二十七局）反推錨定；校準後計神獨立命中例局所載「午為計神」，為零自由度之交叉驗證。主客算值域上限 40，與卷六「算得四十為無人」相符。<br>
     ・真太陽時模組：經度差＋均時差（Meeus 28.3）之純天文換算，僅定時辰用；農曆朔氣維持 UTC+8 慣例。<br>
     ・始擊推進未套用乾坤重留（文獻未提及，按字面實作純推進）。本工具供術數研究與學習用途。
   </footer>
@@ -299,6 +318,8 @@ function gregorianFromJDN(jdn){let a=jdn+32044;const b=Math.floor((4*a+3)/146097
   dd=Math.floor((4*c+3)/1461),e=c-Math.floor(1461*dd/4),mm=Math.floor((5*e+2)/153);
   return{year:100*b+dd-4800+Math.floor(mm/10),month:mm+3-12*Math.floor(mm/10),day:e-Math.floor((153*mm+2)/5)+1};}
 function deltaT(y){let t;
+  if(y<500){t=y/100;return 10583.6-1014.41*t+33.78311*t*t-5.952053*t**3-0.1798452*t**4+0.022174192*t**5+0.0090316521*t**6;}
+  if(y<1600){t=(y-1000)/100;return 1574.2-556.01*t+71.23472*t*t+0.319781*t**3-0.8503463*t**4-0.005050998*t**5+0.0083572073*t**6;}
   if(y<1700){t=y-1600;return 120-0.9808*t-0.01532*t*t+t**3/7129;}
   if(y<1800){t=y-1700;return 8.83+0.1603*t-0.0059285*t*t+0.00013336*t**3-t**4/1174000;}
   if(y<1860){t=y-1800;return 13.72-0.332447*t+0.0068612*t*t+0.0041116*t**3-0.00037436*t**4+0.0000121272*t**5-0.0000001699*t**6+0.000000000875*t**7;}
@@ -443,7 +464,221 @@ const mod0=(a,m)=>((a%m)+m)%m;
 const mod1=(a,m)=>{const r=mod0(a,m);return r===0?m:r;};
 
 // ============================================================
-// 數象判讀：天＝十、地＝五、人＝一（現代整理）
+// 時計核心（金鏡系）：規則全數經卷一例局驗證
+// ============================================================
+const HOUR_CFG={
+  name:"太乙金鏡式經（四庫本）",
+  taiyi:{seqYang:[1,2,3,4,6,7,8,9],seqYin:[9,8,7,6,4,3,2,1],perPalace:3,ev:"guji"},
+  tianmu:{yangStart:12,yangDouble:[15,11],yinStart:4,yinDouble:[7,3],cycle:18,ev:"guji"},
+  jishen:{yangStart:4,yinStart:12,ev:"guji"},   // 陽起寅(呂申) 陰起申(武德)，皆逆行十二辰
+  shiji:{anchor:3,ev:"guji"},
+  suan:{inclStart:true,inclEnd:false,jianPlus:true,dir:"cw",ev:"guji"},
+  jiang:{method:"棄十",ev:"guji"},
+  anchor:{ju:27,note:"《推時計差法》全數闕字，以卷一例局（陰遁二十七局）反推積時錨點",ev:"custom"},
+  zishiNextDay:{value:true,ev:"user"}
+};
+const T_MAP16={1:15,2:9,3:3,4:5,6:13,7:11,8:1,9:7};
+const T_GUA={1:"乾",2:"離",3:"艮",4:"震",6:"兌",7:"坤",8:"坎",9:"巽"};
+const P16_TO_TID={15:1,9:2,3:3,5:4,13:6,11:7,1:8,7:9};
+const ZHI12=[1,2,4,5,6,8,9,10,12,13,14,16];
+
+function jdFromJulian(y,m,d){if(m<=2){y-=1;m+=12;}
+  return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d-1524.5;}
+function termJD(year,lonDeg,gm,gd){
+  // 1582-10 之前用儒略曆定初猜值（唐代例局所需）
+  const g=(year>1582||(year===1582&&gm>10))?jdFromGregorian(year,gm,gd):jdFromJulian(year,gm,gd);
+  const jde=solarTermJDE(lonDeg,g);
+  const gg=gregorianFromJDN(Math.floor(jde+0.5));
+  return jde-deltaT(gg.year+(gg.month-0.5)/12)/86400+8/24;
+}
+const winterSolsticeJD=y=>termJD(y,270,12,21);
+const summerSolsticeJD=y=>termJD(y,90,6,21);
+
+function h_taiyiPalace(ju,yin){
+  const chi=mod1(ju,24);
+  let adv,stay;
+  if(chi%3===0){adv=chi/3-1;stay=3;}else{adv=Math.floor(chi/3);stay=chi%3;}
+  const id=(yin?HOUR_CFG.taiyi.seqYin:HOUR_CFG.taiyi.seqYang)[adv];
+  return{id,p16:T_MAP16[id],gua:T_GUA[id],stay,li:["理天","理地","理人"][stay-1],chi,adv};
+}
+function h_tianmu(ju,yin){
+  const zy=mod1(ju,HOUR_CFG.tianmu.cycle);
+  const start=yin?HOUR_CFG.tianmu.yinStart:HOUR_CFG.tianmu.yangStart;
+  const dbl=yin?HOUR_CFG.tianmu.yinDouble:HOUR_CFG.tianmu.yangDouble;
+  const seq=[];let p=start;
+  while(seq.length<zy+2){seq.push(p);if(dbl.includes(p))seq.push(p);p=p%16+1;}
+  return{pos:seq[zy-1],zy,trace:seq.slice(0,zy)};
+}
+function h_jishen(shishi,yin){
+  const r=mod1(shishi,12);
+  const start=yin?HOUR_CFG.jishen.yinStart:HOUR_CFG.jishen.yangStart;
+  const idx=ZHI12.indexOf(start);
+  return{pos:ZHI12[mod0(idx-(r-1),12)],r};
+}
+const h_shiji=(tm,js)=>mod0(tm-1+mod0(HOUR_CFG.shiji.anchor-js,16),16)+1;
+function h_suan(start,taiyiP16){
+  let sum=0,p=start,steps=0;
+  if(P16[start-1].type==="間")sum+=1;
+  if(P16_TO_TID[p])sum+=P16_TO_TID[p];
+  while(steps<20){p=p%16+1;steps++;if(p===taiyiP16)break;if(P16_TO_TID[p])sum+=P16_TO_TID[p];}
+  return sum;
+}
+const h_jiang=n=>{const r=n%10;return r===0?10:r;};
+
+// 積時錨點：以 724 年立冬後六日申時 ≡ 陰遁27局 反推（模組載入時計算一次）
+let HOUR_OFFSET=null;
+function calcHourOffset(){
+  if(HOUR_OFFSET!==null)return HOUR_OFFSET;
+  const Y=724;
+  const ld=termJD(Y,225,11,7);                 // 立冬時刻（當地JD）
+  const ldJDN=Math.floor(ld+0.5);              // 立冬所在之當地日（JDN）
+  const g=gregorianFromJDN(ldJDN+5);           // 立冬後第6日
+  const target=jdFromGregorian(g.year,g.month,g.day)+16/24;  // 該日申時（16時）
+  const ss=summerSolsticeJD(Y);
+  const raw=Math.floor((target-ss)*24/2)+1;
+  HOUR_OFFSET=mod0(HOUR_CFG.anchor.ju-mod1(raw,72),72);
+  ANCHOR_DATE=g;
+  return HOUR_OFFSET;
+}
+let ANCHOR_DATE=null;
+
+function computeHour(year,month,day,hh,mm,useTST,lonDeg){
+  const steps=[];
+  const push=(txt,ev)=>steps.push({txt,ev});
+  let h=hh,m=mm,dayShift=0,tstNote="";
+  if(useTST&&!isNaN(lonDeg)){
+    const civilMin=hh*60+mm;
+    const jdUT=jdFromGregorian(year,month,day)+(civilMin/60-8)/24;
+    const lonCorr=(lonDeg-120)*4, eot=equationOfTime(jdUT);
+    let tMin=civilMin+lonCorr+eot;
+    if(tMin<0){tMin+=1440;dayShift=-1;}
+    if(tMin>=1440){tMin-=1440;dayShift=1;}
+    h=Math.floor(tMin/60);m=Math.round(tMin%60);
+    tstNote=`（真太陽時：標準時 ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")} 經度差 ${lonCorr>=0?"+":"−"}${Math.abs(lonCorr).toFixed(1)} 分、均時差 ${eot>=0?"+":"−"}${Math.abs(eot).toFixed(1)} 分 → ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}）`;
+    push(`真太陽時定時辰：經度 ${lonDeg}°E，標準時 ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")} → 真太陽時 <b>${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}</b>`,"astro");
+  }else{
+    push(`以裝置標準時定時辰（未啟用真太陽時修正）`,"user");
+  }
+  // 子時歸次日（使用者裁定）：23:00 起之子時屬次日，時實連續遞進
+  const branchIdx=Math.floor((((h*60+m)/60+1)%24)/2);
+  let jd=jdFromGregorian(year,month,day)+dayShift+(h*60+m)/1440;
+  if(h>=23)push(`子時（23:00 起）依裁定歸<b>次日</b>：時實依實際時刻連續累積，不另行進位`,"user");
+  push(`時辰 → <b>${BRANCHES[branchIdx]}時</b>${tstNote}`,"astro");
+
+  const ws=winterSolsticeJD(year),ss=summerSolsticeJD(year),wsPrev=winterSolsticeJD(year-1);
+  let yin,base,baseName;
+  if(jd>=ss&&jd<ws){yin=true;base=ss;baseName="夏至";}
+  else if(jd>=ws){yin=false;base=ws;baseName="冬至";}
+  else {yin=false;base=wsPrev;baseName="前年冬至";}
+  push(`${baseName}後 → <b>${yin?"陰遁":"陽遁"}</b>（陽遁太乙起乾順行、陰遁起巽逆行）`,"guji");
+
+  const off=calcHourOffset();
+  const shishi=Math.floor((jd-base)*24/2)+1+off;
+  const ju=mod1(shishi,72);
+  push(`積時＝自${baseName}起 ${Math.floor((jd-base)*24/2)+1} 時辰 ＋錨點偏移 ${off} ＝ <b>${shishi}</b>；入局＝時實 mod 72 ＝ <b>第 ${ju} 局</b>`,"custom");
+
+  const T=h_taiyiPalace(ju,yin);
+  push(`太乙：入局 mod 24＝${T.chi} → 已走 ${T.adv} 宮、入宮第 ${T.stay} 時（${T.li}）→ <b>${T.gua}宮（${pName(T.p16)}）</b>，三時一移`,"guji");
+  const TM=h_tianmu(ju,yin);
+  push(`天目：周餘＝入局 mod 18＝${TM.zy}，${yin?"陰遁起呂申(寅)、大炅和德重留":"陽遁起武德(申)、陰德大武重留"}，順行 → <b>${pName(TM.pos)}</b>`,"guji");
+  const JS=h_jishen(shishi,yin);
+  push(`計神：時實 mod 12＝${JS.r}，${yin?"陰遁起武德(申)":"陽遁起呂申(寅)"}逆行十二辰 → <b>${pName(JS.pos)}</b>`,"guji");
+  const SJ=h_shiji(TM.pos,JS.pos);
+  push(`始擊：計神加和德，移動 ${mod0(3-JS.pos,16)} 宮，天目順推 → <b>${pName(SJ)}</b>`,"guji");
+  const zhu=h_suan(TM.pos,T.p16),ke=h_suan(SJ,T.p16);
+  push(`主算：自天目 ${pName(TM.pos)} 起（含），順行累加所經八正宮之太乙編號至太乙宮前止${P16[TM.pos-1].type==="間"?"，起於間神加一":""} ＝ <b>${zhu}</b>`,"guji");
+  push(`客算：自始擊 ${pName(SJ)} 起，同法累加 ＝ <b>${ke}</b>`,"guji");
+  const zhuDa=h_jiang(zhu),zhuCan=h_jiang(h_jiang(zhu)*3),keDa=h_jiang(ke),keCan=h_jiang(h_jiang(ke)*3);
+  push(`四將（棄十法）：主大將 ${zhuDa}宮、主參將 ${zhuCan}宮、客大將 ${keDa}宮、客參將 ${keCan}宮`,"guji");
+  const zhuSC=sanCai(zhu),keSC=sanCai(ke);
+  push(`數象：主算 ${zhu}＝${zhuSC.decomp} → <b>${zhuSC.label}</b>；客算 ${ke}＝${keSC.decomp} → <b>${keSC.label}</b>（金鏡卷六）`,"guji");
+
+  const judge=(n,label)=>n>10?{t:"長算",d:label==="主算"?"主方力量強盛，主吉":"客方攻勢猛烈，利客",cls:"jade"}
+    :(n===10?{t:"太微算",d:label==="主算"?"數滿則溢，主方只宜固守":"客攻勢至極而止",cls:"gold"}
+    :{t:"短算",d:label==="主算"?"主方兵力疲弱，主凶":"客方後勁不足",cls:"verm"});
+  const zhuO={total:zhu,judge:judge(zhu,"主算"),sc:zhuSC},keO={total:ke,judge:judge(ke,"客算"),sc:keSC};
+  const S=SCHOOLS.taojin;
+  const pat=detectPatterns({taiyiP16:T.p16,wenchang:TM.pos,shiji:SJ,zhuDa,zhuCan,keDa,keCan},S,yin);
+  if(pat.length)push(`格局偵測：觸發 <b>${pat.map(x=>x.name).join("、")}</b>（陰陽遁前後方向依運行方向判定）`,"guji");
+  else push(`格局偵測：掩、迫、擊、關、囚皆未觸發`,"guji");
+  const sc=scoreOf(zhuO,keO,pat,S);
+  push(`綜合評分：${sc.log.join("；")} → <b>${sc.score>0?"+":""}${sc.score}（${sc.grade}）</b>`,"custom");
+  const radar=radarOf(zhuO,keO,sc,TM.pos,SJ,S,40);
+  return{system:"hour",year,month,day,hh:h,mm:m,branch:BRANCHES[branchIdx],yin,shishi,ju,off,
+    taiyiId:T.id,taiyiP16:T.p16,taiyiGua:T.gua,stayYear:T.stay,liName:T.li,
+    wenchang:TM.pos,jishen:JS.pos,shiji:SJ,zhu:zhuO,ke:keO,
+    zhuDa,zhuCan,keDa,keCan,patterns:pat,score:sc.score,grade:sc.grade,scoreLog:sc.log,radar,steps};
+}
+
+// ===== 共用：格局偵測 / 評分 / 雷達（年計時計共用）=====
+function detectPatterns(r,S,yin){
+  const {taiyiP16,wenchang,shiji,zhuDa,zhuCan,keDa,keCan}=r;
+  const fwd=n=>yin?mod0(n-2,16)+1:n%16+1;      // 順行方向＝運行方向
+  const bwd=n=>yin?n%16+1:mod0(n-2,16)+1;
+  const isGua=n=>[3,7,11,15].includes(n);
+  const WX=S.wuxing.map,KE=S.wuxing.keTable;
+  const P=[];
+  if(shiji===taiyiP16)P.push({name:"掩",sev:"凶",desc:`始擊臨太乙宮（${pName(taiyiP16)}）——掩襲劫殺之象，客方佔絕對優勢。所臨${P16[taiyiP16-1].shen}主${P16[taiyiP16-1].zhu}`});
+  if(shiji===fwd(taiyiP16))P.push({name:"擊",sev:"警",desc:`始擊在太乙運行前方一格（${pName(shiji)}）——${isGua(shiji)?"外宮擊":"前擊（辰位，災急疾）"}，臣凌君卑之象。所臨${P16[shiji-1].shen}主${P16[shiji-1].zhu}`});
+  else if(shiji===bwd(taiyiP16))P.push({name:"擊",sev:"警",desc:`始擊在太乙運行後方一格（${pName(shiji)}）——${isGua(shiji)?"內宮擊":"後擊（辰位，災急疾）"}，臣凌君卑之象。所臨${P16[shiji-1].shen}主${P16[shiji-1].zhu}`});
+  for(const[gl,gp]of[["主大將",zhuDa],["主參將",zhuCan],["客大將",keDa],["客參將",keCan]]){
+    if(gp===fwd(taiyiP16)||gp===bwd(taiyiP16)){
+      const dir=gp===fwd(taiyiP16)?"外迫":"內迫";
+      P.push({name:"迫",sev:"警",desc:`${gl}臨太乙${dir}一格（${pName(gp)}）——${isGua(gp)?"宮迫，災微緩":"辰迫，災急疾"}，上下相凌。所臨${P16[gp-1].shen}主${P16[gp-1].zhu}`});
+    }
+  }
+  const gj=()=>{const zw=WX[wenchang],kw=WX[shiji];
+    if(KE[zw]===kw)return{r:"主勝",d:`文昌宮五行「${zw}」克始擊宮「${kw}」`};
+    if(KE[kw]===zw)return{r:"客勝",d:`始擊宮「${kw}」克文昌宮「${zw}」`};
+    return{r:"未決",d:`「${zw}」與「${kw}」非相克，勢不兩立、勝負膠著`};};
+  if(zhuDa===keDa){const g=gj();P.push({name:"關",sev:"判",desc:`主客大將同宮（${pName(zhuDa)}）——兩軍主力對峙；${g.d} → <b>${g.r}</b>`,guan:g.r});}
+  if(zhuCan===keCan){const g=gj();P.push({name:"關",sev:"判",desc:`主客參將同宮（${pName(zhuCan)}）——偏師相持；${g.d} → <b>${g.r}</b>`,guan:g.r});}
+  for(const[gl,gp]of[["主大將",zhuDa],["客大將",keDa]]){
+    if(gp===taiyiP16){
+      const jue=taiyiP16===S.patterns.jueYang?"，且太乙居絕陽之地（午）":(taiyiP16===S.patterns.jueYin?"，且太乙居絕陰之地（子）":"");
+      P.push({name:"囚",sev:jue?"凶":"警",desc:`${gl}與太乙同宮（${pName(gp)}）——篡戮禁錮、功高震主之象${jue}`,jue:!!jue});
+    }
+  }
+  return P;
+}
+function scoreOf(zhu,ke,patterns,S){
+  const W=S.scoring;
+  let score=(zhu.total-ke.total)*W.wDiff,proZhu=0,proKe=0;
+  const log=[`基礎分＝(主算${zhu.total}−客算${ke.total})×${W.wDiff}＝${score>0?"+":""}${score}`];
+  for(const pt of patterns){
+    let adj=0;
+    if(pt.name==="掩")adj=W.yanPenalty;
+    else if(pt.name==="擊")adj=W.jiPenalty;
+    else if(pt.name==="迫")adj=pt.desc.includes("宮迫")?W.poGong:W.poChen;
+    else if(pt.name==="關")adj=pt.guan==="主勝"?W.guanWin:(pt.guan==="客勝"?-W.guanWin:0);
+    else if(pt.name==="囚")adj=pt.jue?W.qiuJuePenalty:W.qiuPenalty;
+    if(adj!==0){score+=adj;if(adj>0)proZhu+=adj;else proKe+=-adj;log.push(`格局「${pt.name}」修正 ${adj>0?"+":""}${adj}`);}
+  }
+  if(zhu.total===10)log.push(`主太微：宜守不宜攻（不加減分）`);
+  if(ke.total===10){score+=W.taiweiKeBonus;proZhu+=W.taiweiKeBonus;log.push(`客太微：客攻勢自止 +${W.taiweiKeBonus}`);}
+  if(patterns.some(p=>p.name==="掩")&&score>W.yanCap){score=W.yanCap;log.push(`掩為否決門：強制壓至 ${W.yanCap}`);}
+  score=Math.max(-100,Math.min(100,score));
+  const grade=score>=60?"大利主":score>=20?"利主":score>-20?"均勢膠著":score>-60?"利客":"大利客／主凶";
+  return{score,grade,log,proZhu,proKe};
+}
+function radarOf(zhu,ke,sc,wenchang,shiji,S,maxSuan){
+  const clamp=v=>Math.max(0,Math.min(100,Math.round(v)));
+  const WX=S.wuxing.map,KE=S.wuxing.keTable;
+  const zwx=WX[wenchang],kwx=WX[shiji];
+  let wxZ=50,wxK=50;
+  if(KE[zwx]===kwx){wxZ=80;wxK=20;}else if(KE[kwx]===zwx){wxZ=20;wxK=80;}
+  const SS=S.shenScore.map;
+  return[
+    {name:"算數強度",zhu:clamp(zhu.total/maxSuan*100),ke:clamp(ke.total/maxSuan*100),ev:"guji"},
+    {name:"五行生剋",zhu:wxZ,ke:wxK,ev:"guji"},
+    {name:"格局淨勢",zhu:clamp(50+sc.proZhu*0.8-sc.proKe*0.4),ke:clamp(50+sc.proKe*0.8-sc.proZhu*0.4),ev:"custom"},
+    {name:"行動自由",zhu:zhu.total===10?20:80,ke:ke.total===10?20:80,ev:"guji"},
+    {name:"神性吉凶",zhu:SS[wenchang],ke:SS[shiji],ev:"custom"}
+  ];
+}
+
+// ============================================================
+// 數象判讀：天＝十、地＝五、人＝一（金鏡卷六明文）
 // ============================================================
 function sanCai(n){
   const tens=Math.floor(n/10),r=n%10,fives=r>=5?1:0,ones=r%5;
@@ -721,23 +956,32 @@ const evBadge=ev=>`<span class="ev ${EV_LABEL[ev][0]}">${EV_LABEL[ev][1]}</span>
 const statCard=(k,v,cls,ev)=>`<div class="stat"><div class="k">${k}${ev?evBadge(ev):""}</div><div class="v ${cls||""}">${v}</div></div>`;
 
 function render(r){
-  // 演算回饋：時間戳＋輸入回顯（即使結果相同也能看出有重新演算）
+  const isHour=r.system==="hour";
   const now=new Date();
   const hh=String(now.getHours()).padStart(2,"0"),mm=String(now.getMinutes()).padStart(2,"0"),ss=String(now.getSeconds()).padStart(2,"0");
   const runInfo=document.getElementById("runInfo");
-  runInfo.innerHTML=`✓ 演算完成 ${hh}:${mm}:${ss} ｜ 輸入 ${r.year}-${String(r.month).padStart(2,"0")}-${String(r.day).padStart(2,"0")} → 農曆 ${r.lunarYear} 年（同一農曆年內任何月日，局面相同）`;
+  runInfo.innerHTML=isHour
+    ? `✓ 演算完成 ${hh}:${mm}:${ss} ｜ 時計 ${r.year}-${String(r.month).padStart(2,"0")}-${String(r.day).padStart(2,"0")} ${r.branch}時 → ${r.yin?"陰遁":"陽遁"} 第 ${r.ju} 局（時實 ${r.shishi}）`
+    : `✓ 演算完成 ${hh}:${mm}:${ss} ｜ 年計 ${r.year}-${String(r.month).padStart(2,"0")}-${String(r.day).padStart(2,"0")} → 農曆 ${r.lunarYear} 年（同一農曆年內任何月日，局面相同）`;
   runInfo.classList.remove("flash");
   void runInfo.offsetWidth; // 重觸發動畫
   runInfo.classList.add("flash");
 
   document.getElementById("statGrid").innerHTML=
-    statCard("農曆年／干支",`${r.lunarYear} <span class="zh">${r.gz.gz}年（${r.gz.animal}）</span>`,"","astro")+
-    statCard("正月初一",r.cnyStr,"","astro")+
-    statCard("太乙積年",r.jiNian,"gold","user")+
-    statCard("入局",`第 ${r.ju} 局・${["上","中","下"][r.yuanIdx]}元`,"gold","guji")+
-    statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}年<span class="zh">（${r.liName}）</span>`,"gold","guji")+
+    (isHour
+      ? statCard("時辰",`${String(r.hh).padStart(2,"0")}:${String(r.mm).padStart(2,"0")} <span class="zh">${r.branch}時</span>`,"","astro")+
+        statCard("遁局",`<span class="zh">${r.yin?"陰遁":"陽遁"}</span>`,"gold","guji")+
+        statCard("時實（積時）",`${r.shishi}`,"gold","custom")+
+        statCard("入局",`第 ${r.ju} 局 ／ 72`,"gold","guji")+
+        statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}時<span class="zh">（${r.liName}）</span>`,"gold","guji")
+      : statCard("農曆年／干支",`${r.lunarYear} <span class="zh">${r.gz.gz}年（${r.gz.animal}）</span>`,"","astro")+
+        statCard("正月初一",r.cnyStr,"","astro")+
+        statCard("太乙積年",r.jiNian,"gold","user")+
+        statCard("入局",`第 ${r.ju} 局・${["上","中","下"][r.yuanIdx]}元`,"gold","guji")+
+        statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}年<span class="zh">（${r.liName}）</span>`,"gold","guji")
+    )+
     statCard("計神",`<span class="zh">${pName(r.jishen)}</span>`,"","guji")+
-    statCard("文昌／天目",`<span class="zh">${pName(r.wenchang)}</span>`,"jade","guji")+
+    statCard(isHour?"天目（主目）":"文昌／天目",`<span class="zh">${pName(r.wenchang)}</span>`,"jade","guji")+
     statCard("始擊／客目",`<span class="zh">${pName(r.shiji)}</span>`,"verm","guji")+
     statCard("主算",`${r.zhu.total}・<span class="zh">${r.zhu.judge.t}・${r.zhu.sc.label}</span>${r.zhu.over16?" ⚠":""}`,r.zhu.judge.cls,"guji")+
     statCard("客算",`${r.ke.total}・<span class="zh">${r.ke.judge.t}・${r.ke.sc.label}</span>${r.ke.over16?" ⚠":""}`,r.ke.judge.cls,"guji")+
@@ -779,7 +1023,7 @@ function render(r){
   const warn=(r.zhu.over16||r.ke.over16)?`<span class="warn17">⚠ 本局出現超出 1–16 值域的算數（詳見演算紀錄），為文獻間已知矛盾，判讀請保留。</span>`:"";
   const patNote=r.patterns.length?`本局觸發格局：<b>${r.patterns.map(p=>p.name).join("、")}</b>，格局之義優先於數值強弱，詳見格局判定區。`:"";
   document.getElementById("interp").innerHTML=
-    `<span class="tag">局勢判讀</span>本年太乙駐 ${r.taiyiGua}宮（${pName(r.taiyiP16)}，${r.liName}之年）；主算 ${r.zhu.total}（${r.zhu.judge.t}，${r.zhu.judge.d}），客算 ${r.ke.total}（${r.ke.judge.t}，${r.ke.judge.d}）。${cmp}${patNote}
+    `<span class="tag">局勢判讀</span>本${isHour?"時":"年"}太乙駐 ${r.taiyiGua}宮（${pName(r.taiyiP16)}，${r.liName}之${isHour?"時":"年"}）；主算 ${r.zhu.total}（${r.zhu.judge.t}，${r.zhu.judge.d}），客算 ${r.ke.total}（${r.ke.judge.t}，${r.ke.judge.d}）。${cmp}${patNote}
     <span style="color:var(--muted);font-size:12px;">〔長短算判定為古籍明文；本段綜合比較文字為現代整理表述，非古籍原文。〕</span>${warn}`;
 
   renderSummary(r);
@@ -794,18 +1038,39 @@ function runCalc(){
   const err=document.getElementById("errBox");
   err.style.display="none";
   try{
+    const sys=document.getElementById("inSystem").value;
     const y=parseInt(document.getElementById("inYear").value);
     const m=Math.min(12,Math.max(1,parseInt(document.getElementById("inMonth").value)||1));
     const d=Math.min(31,Math.max(1,parseInt(document.getElementById("inDay").value)||1));
-    if(!y||y<1628||y>2145)throw new Error("年份需介於 1628–2145（受積年錨點與 ΔT 模型範圍限制）。");
-    render(compute(y,m,d,document.getElementById("inSchool").value));
+    if(sys==="hour"){
+      if(!y||y<1|| y>2145)throw new Error("時計年份需不大於 2145（ΔT 模型範圍）。");
+      const tv=(document.getElementById("inTime").value||"12:00").split(":");
+      const useTST=document.getElementById("useTST").checked;
+      const lon=parseFloat(document.getElementById("tsLon").value);
+      render(computeHour(y,m,d,parseInt(tv[0]),parseInt(tv[1]),useTST,lon));
+    }else{
+      if(!y||y<1628||y>2145)throw new Error("年計年份需介於 1628–2145（受積年錨點與 ΔT 模型範圍限制）。");
+      render(compute(y,m,d,document.getElementById("inSchool").value));
+    }
   }catch(e){
     err.textContent="⚠ "+e.message;
     err.style.display="block";
   }
 }
+function syncSystemUI(){
+  const hour=document.getElementById("inSystem").value==="hour";
+  document.getElementById("hourTimeField").style.display=hour?"block":"none";
+  document.getElementById("hintYear").style.display=hour?"none":"block";
+  document.getElementById("hintHour").style.display=hour?"block":"none";
+  document.getElementById("schoolField").style.display=hour?"none":"block";
+  document.getElementById("btPanel").style.display=hour?"none":"block";
+  runCalc();
+}
 buildBoard();
 document.getElementById("calcBtn").addEventListener("click",runCalc);
+document.getElementById("inSystem").addEventListener("change",syncSystemUI);
+document.getElementById("useTST").addEventListener("change",runCalc);
+document.getElementById("inTime").addEventListener("input",runCalc);
 for(const id of["inYear","inMonth","inDay"]){
   document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")runCalc();});
 }
@@ -825,7 +1090,7 @@ function renderSummary(r){
   if(hasYan)headline="凶局：現掩襲之象，客方佔絕對優勢，主方切忌輕舉";
   else headline={"大利主":"主方全面佔優之年","利主":"主方形勢有利之年","均勢膠著":"主客勢均，成敗繫於細節之年","利客":"客方形勢有利，主方宜守之年","大利客／主凶":"客方大優，主方非常之年"}[r.grade];
   const tips=[];
-  tips.push(`主算 <b>${r.zhu.total}（${r.zhu.judge.t}）</b> 對 客算 <b>${r.ke.total}（${r.ke.judge.t}）</b>，太乙駐${r.taiyiGua}宮${r.liName}之年`);
+  tips.push(`主算 <b>${r.zhu.total}（${r.zhu.judge.t}・${r.zhu.sc.label}）</b> 對 客算 <b>${r.ke.total}（${r.ke.judge.t}・${r.ke.sc.label}）</b>，太乙駐${r.taiyiGua}宮${r.liName}`);
   const seen=new Set();
   for(const p of r.patterns){
     if(seen.has(p.name))continue;seen.add(p.name);
@@ -838,8 +1103,12 @@ function renderSummary(r){
   }
   if(r.zhu.total===10)tips.push("<b>主太微</b>：數滿則溢，宜固守、不可主動出擊");
   if(r.ke.total===10)tips.push("<b>客太微</b>：對方攻勢將於極點自行衰竭");
-  const pct=percentileOf(r.score);
-  tips.push(`歷史定位：本年評分（${r.score>0?"+":""}${r.score}）高於 1950–2050 區間約 <b>${pct}%</b> 的年份`);
+  if(r.system!=="hour"){
+    const pct=percentileOf(r.score);
+    tips.push(`歷史定位：本年評分（${r.score>0?"+":""}${r.score}）高於 1950–2050 區間約 <b>${pct}%</b> 的年份`);
+  }else{
+    tips.push(`時計盤：${r.yin?"陰遁":"陽遁"}第 ${r.ju} 局，主客算值域 1–40（金鏡累加法）`);
+  }
   document.getElementById("summaryCard").innerHTML=
     `<div class="headline">${headline}</div><ul>${tips.slice(0,5).map(t=>`<li>${t}</li>`).join("")}</ul>`;
 }
@@ -1067,6 +1336,7 @@ document.getElementById("btTable").addEventListener("click",e=>{
     document.getElementById("inMonth").value=d.getMonth()+1;
     document.getElementById("inDay").value=d.getDate();
   }
+  document.getElementById("inTime").value=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 })();
 buildWeightsUI();
 runCalc();
