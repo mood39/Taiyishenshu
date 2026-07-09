@@ -14,6 +14,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  html{background:#0f1526;}
   body{
     background:
       radial-gradient(1px 1px at 12% 18%, rgba(234,230,216,.35) 0, transparent 60%),
@@ -249,6 +250,21 @@
     </div>
   </div>
 
+  <div class="panel" style="margin-bottom:18px;">
+    <h2>真 太 陽 時 · 定 時 辰（時計預備模組）</h2>
+    <div class="bt-controls" style="align-items:flex-end;">
+      <div class="field"><label>日期</label><input type="date" id="tsDate" style="width:160px;"></div>
+      <div class="field"><label>時刻（裝置標準時）</label><input type="time" id="tsTime" style="width:120px;"></div>
+      <div class="field"><label>地理經度 °E（西經為負）</label><input type="number" id="tsLon" step="0.01" style="width:130px;"></div>
+      <button type="button" id="tsGeo" class="mini-btn">使用裝置定位</button>
+    </div>
+    <div id="tsLonHint" style="margin-top:8px;font-size:11.5px;color:#d08573;"></div>
+    <div id="tsOut" style="margin-top:14px;font-family:'Space Mono',monospace;font-size:13px;line-height:2.2;color:var(--white-dim);"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.9;">
+      真太陽時＝標準時＋經度差＋均時差，即古人日晷所量之時；時計太乙以此定時辰。本模組僅供換算與教學；農曆朔氣（正月初一、節氣）依現代曆法慣例維持 UTC+8，不受此處設定影響。子時（23–01時）跨日歸屬規則待時計模組裁決後實作。
+    </div>
+  </div>
+
   <details class="audit" open>
     <summary>演 算 步 驟 全 紀 錄（可稽核）</summary>
     <div class="audit-body" id="auditBody"></div>
@@ -265,6 +281,7 @@
     ・十六神性情（得名由來與所主之事）：多個獨立來源一致轉載之古文簡釋，標為現代整理；巽宮之神依使用者裁定採古名「大炅」（部分文獻作「大光明」，同義轉寫）。<br>
     ・數象判讀（三才數／無天無地無人）：天＝十、地＝五、人＝一之拆解規則，多源一致，標現代整理。<br>
     ・五維雷達之「格局淨勢」換算與「神性吉凶」十六神分數表為自訂模型；白話總結卡由古籍明文判定組裝；歷史分位數以 1950–2050 區間為基準。<br>
+    ・真太陽時模組：經度差＋均時差（Meeus 28.3）之純天文換算，僅定時辰用；農曆朔氣維持 UTC+8 慣例。<br>
     ・始擊推進未套用乾坤重留（文獻未提及，按字面實作純推進）。本工具供術數研究與學習用途。
   </footer>
 </div>
@@ -350,6 +367,18 @@ function _chineseNewYearJDNRaw(Y){
     if(num===1)return moons[i];
   }
   throw new Error("未能定位正月初一");
+}
+// 均時差（分鐘；真太陽時 − 平太陽時），Meeus 28.3
+function equationOfTime(jdUT){
+  const T=(jdUT-2451545)/36525;
+  const L0=norm360(280.46646+36000.76983*T+0.0003032*T*T)*RAD;
+  const M=norm360(357.52911+35999.05029*T-0.0001537*T*T)*RAD;
+  const e=0.016708634-0.000042037*T-0.0000001267*T*T;
+  const eps=(23.43929111-0.01300417*T)*RAD;
+  const y=Math.tan(eps/2)**2;
+  const E=y*Math.sin(2*L0)-2*e*Math.sin(M)+4*e*y*Math.sin(M)*Math.cos(2*L0)
+        -0.5*y*y*Math.sin(4*L0)-1.25*e*e*Math.sin(2*M);
+  return E*(180/Math.PI)*4;
 }
 const STEMS=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
 const BRANCHES=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
@@ -847,6 +876,70 @@ function renderRadar(r){
     r.radar.map(a=>`${a.name}：<b style="color:#5f9082;">${a.zhu}</b> 對 <b style="color:#c65540;">${a.ke}</b> ${evBadge(a.ev)}`).join("<br>")+
     `<br><span style="font-size:10.5px;">神性吉凶依十六神分數表（自訂待考，見 SCHOOLS 配置 shenScore）；格局淨勢由評分加減分換算。</span>`;
 }
+
+// ============================================================
+// 真太陽時換算（時計預備；純天文計算）
+// ============================================================
+const tzOffHours=-(new Date().getTimezoneOffset())/60;
+const tzCentralMeridian=tzOffHours*15;
+const tzName=(typeof Intl!=="undefined"&&Intl.DateTimeFormat)?Intl.DateTimeFormat().resolvedOptions().timeZone:"裝置時區";
+let tsLonTouched=false;
+
+function tsUpdate(){
+  const dv=document.getElementById("tsDate").value;
+  const tv=document.getElementById("tsTime").value;
+  const lon=parseFloat(document.getElementById("tsLon").value);
+  const out=document.getElementById("tsOut");
+  if(!dv||!tv||isNaN(lon)){out.innerHTML="請填齊日期、時刻與經度。";return;}
+  const[y,mo,d]=dv.split("-").map(Number);
+  const[hh,mi]=tv.split(":").map(Number);
+  const civilMin=hh*60+mi;
+  const jdUT=jdFromGregorian(y,mo,d)+(civilMin/60-tzOffHours)/24;
+  const lonCorr=(lon-tzCentralMeridian)*4;           // 經度差（分）
+  const eot=equationOfTime(jdUT);                    // 均時差（分）
+  let trueMin=civilMin+lonCorr+eot;
+  let dayShift=0;
+  if(trueMin<0){trueMin+=1440;dayShift=-1;}
+  if(trueMin>=1440){trueMin-=1440;dayShift=1;}
+  const th=Math.floor(trueMin/60),tm=Math.round(trueMin%60);
+  const fmt=v=>(v>=0?"+":"−")+Math.abs(v).toFixed(1);
+  const branchIdx=Math.floor((((trueMin/60)+1)%24)/2);
+  const branch=BRANCHES[branchIdx];
+  out.innerHTML=
+    `裝置時區：${tzName}（UTC${tzOffHours>=0?"+":""}${tzOffHours}，中央經線 ${tzCentralMeridian}°）<br>`+
+    `標準時 ${String(hh).padStart(2,"0")}:${String(mi).padStart(2,"0")}`+
+    `　經度差 ${fmt(lonCorr)} 分（經度 ${lon}° − 中央經線 ${tzCentralMeridian}°，每度 4 分）<br>`+
+    `　均時差 ${fmt(eot)} 分（Meeus 28.3）<br>`+
+    `→ 真太陽時 <b style="color:var(--gold);">${String(th).padStart(2,"0")}:${String(tm).padStart(2,"0")}</b>${dayShift?`（跨${dayShift>0?"次":"前"}日）`:""}`+
+    ` → <b style="color:var(--gold);font-family:'Noto Serif TC',serif;">${branch}時</b>${branch==="子"?"（跨日歸屬待時計模組裁決）":""}`;
+}
+(function(){
+  const d=new Date();
+  document.getElementById("tsDate").value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  document.getElementById("tsTime").value=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  document.getElementById("tsLon").value=tzCentralMeridian.toFixed(2);
+  document.getElementById("tsLonHint").textContent=`⚠ 預設值 ${tzCentralMeridian}° 為時區中央經線，請改為你實際所在經度（例：台北約 121.56、台中約 120.68、高雄約 120.30），或按「使用裝置定位」。`;
+  for(const id of["tsDate","tsTime","tsLon"]){
+    document.getElementById(id).addEventListener("input",()=>{
+      if(id==="tsLon"){tsLonTouched=true;document.getElementById("tsLonHint").style.display="none";}
+      tsUpdate();
+    });
+  }
+  document.getElementById("tsGeo").addEventListener("click",()=>{
+    if(typeof navigator==="undefined"||!navigator.geolocation){
+      document.getElementById("tsLonHint").textContent="此環境不支援定位，請手動輸入經度。";return;
+    }
+    navigator.geolocation.getCurrentPosition(pos=>{
+      document.getElementById("tsLon").value=pos.coords.longitude.toFixed(2);
+      document.getElementById("tsLonHint").textContent=`✓ 已取得裝置經度 ${pos.coords.longitude.toFixed(2)}°`;
+      document.getElementById("tsLonHint").style.color="#7fb0a0";
+      tsUpdate();
+    },()=>{
+      document.getElementById("tsLonHint").textContent="⚠ 定位未授權，請手動輸入實際經度。";
+    });
+  });
+  tsUpdate();
+})();
 
 // ============================================================
 // 評分權重調整（自訂模型）
