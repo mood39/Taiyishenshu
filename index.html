@@ -44,6 +44,10 @@
   #shenInfo{margin-top:12px;width:100%;border:1px solid var(--panel-border);border-left:3px solid #6a5a8a;
     background:rgba(10,14,24,.5);border-radius:2px;padding:12px 14px;font-size:12.5px;line-height:1.95;color:var(--white-dim);}
   #shenInfo .sn{font-family:"Noto Serif TC",serif;font-weight:700;color:var(--star);letter-spacing:2px;margin-right:8px;}
+  .qmark{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:5px;
+    border:1px solid #4a5578;border-radius:50%;font-size:10px;color:#8a93b0;cursor:pointer;vertical-align:middle;
+    font-family:'Space Mono',monospace;line-height:1;transition:all .15s;}
+  .qmark:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,162,39,.1);}
   #summaryCard{border:1px solid var(--gold-soft);background:linear-gradient(160deg,rgba(201,162,39,.09),rgba(18,26,46,.7));
     border-radius:3px;padding:18px 20px;margin-bottom:18px;}
   #summaryCard .headline{font-family:"Noto Serif TC",serif;font-weight:900;font-size:19px;letter-spacing:2px;color:var(--gold);margin-bottom:8px;}
@@ -179,11 +183,26 @@
         <label>流派配置 SCHOOL</label>
         <select id="inSchool"><option value="taojin">淘金歌·統宗大全整理版</option></select>
       </div>
-      <div class="field" id="hourTimeField" style="display:none;">
-        <label>時刻（用於定時辰）</label>
-        <input type="time" id="inTime" value="12:00">
-        <div style="margin-top:6px;font-size:11px;color:var(--muted);">
-          <label style="display:inline;letter-spacing:0;"><input type="checkbox" id="useTST" checked style="width:auto;vertical-align:middle;"> 以真太陽時定時辰（下方模組之經度）</label>
+      <div id="hourTimeField" style="display:none;">
+        <div class="field">
+          <label>時刻（用於定時辰）</label>
+          <input type="time" id="inTime" value="12:00">
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label style="display:flex;align-items:center;gap:8px;letter-spacing:0;">
+            <input type="checkbox" id="useTST" checked style="width:auto;margin:0;"> 以真太陽時定時辰（古人日晷所量之時）
+          </label>
+        </div>
+        <div id="tstRow" style="margin-top:12px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div class="field" style="flex:1 1 150px;margin:0;">
+              <label>地理經度 °E（西經為負）</label>
+              <input type="number" id="tsLon" step="0.01" placeholder="121.45">
+            </div>
+            <button type="button" id="tsGeo" class="mini-btn" style="height:42px;">使用裝置定位</button>
+          </div>
+          <div id="tsLonHint" style="margin-top:8px;font-size:11.5px;color:#d08573;line-height:1.8;"></div>
+          <div id="tsOut" style="margin-top:10px;padding:10px 12px;background:rgba(10,14,24,.5);border-left:2px solid var(--gold-soft);border-radius:2px;font-family:'Space Mono',monospace;font-size:12px;line-height:2;color:var(--white-dim);"></div>
         </div>
       </div>
       <div class="row3">
@@ -267,21 +286,6 @@
     </div>
   </div>
 
-  <div class="panel" style="margin-bottom:18px;">
-    <h2>真 太 陽 時 · 定 時 辰（時計預備模組）</h2>
-    <div class="bt-controls" style="align-items:flex-end;">
-      <div class="field"><label>日期</label><input type="date" id="tsDate" style="width:160px;"></div>
-      <div class="field"><label>時刻（裝置標準時）</label><input type="time" id="tsTime" style="width:120px;"></div>
-      <div class="field"><label>地理經度 °E（西經為負）</label><input type="number" id="tsLon" step="0.01" style="width:130px;"></div>
-      <button type="button" id="tsGeo" class="mini-btn">使用裝置定位</button>
-    </div>
-    <div id="tsLonHint" style="margin-top:8px;font-size:11.5px;color:#d08573;"></div>
-    <div id="tsOut" style="margin-top:14px;font-family:'Space Mono',monospace;font-size:13px;line-height:2.2;color:var(--white-dim);"></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.9;">
-      真太陽時＝標準時＋經度差＋均時差，即古人日晷所量之時；時計太乙以此定時辰。本模組僅供換算與教學；農曆朔氣（正月初一、節氣）依現代曆法慣例維持 UTC+8，不受此處設定影響。子時（23–01時）跨日歸屬規則待時計模組裁決後實作。
-    </div>
-  </div>
-
   <details class="audit" open>
     <summary>演 算 步 驟 全 紀 錄（可稽核）</summary>
     <div class="audit-body" id="auditBody"></div>
@@ -299,8 +303,15 @@
     ・數象判讀（三才數／無天無地無人）：天＝十、地＝五、人＝一之拆解規則，多源一致，標現代整理。<br>
     ・五維雷達之「格局淨勢」換算與「神性吉凶」十六神分數表為自訂模型；白話總結卡由古籍明文判定組裝；歷史分位數以 1950–2050 區間為基準。<br>
     ・<b>時計系統</b>（金鏡系）：太乙行宮（陽遁起乾順行／陰遁起巽逆行、三時一移）、天目（陽起武德重留陰德大武／陰起呂申重留大炅和德）、計神（陽起寅／陰起申，逆行十二辰）、始擊（計神加和德）、主客算（自星起含、順行累加八正宮太乙編號、至太乙宮前止、間神加一）、四將（棄十法）、數象（卷六）——全部依《太乙金鏡式經》四庫本，並經卷一例局（陰遁二十七局：太乙九宮、大武為天目、午為計神、主算二十九、客算四、四將九七四二）<b>九項全數驗證通過</b>。<br>
+    ・<b>武經總要 144 立成局實證校正</b>：本系統時計規則經《武經總要》卷十九（陽局 72、陰局 72，共 144 例）逐局檢驗——太乙行宮 97.9%、主算 92.9%、客算 86.0%（未達 100% 者經查多為原文 OCR 訛誤；武經自身內部一致性亦僅 87–90%）。據此修正兩處：(1) 星曜與太乙同宮（囚格）時，主客算只累加自身；(2) 四將之「棄十法」實為「個位非零取個位、為零取十位」（10→1、30→3、40→4），命中率由 88.9% 升至 96.2%；此法後得《金鏡式經》原文印證——「<b>若得十，置一；若得二十四，棄二十，置四</b>」，故列為<b>古籍明文</b>。金鏡例局因主算 29、客算 4 個位皆非零，無法辨別二法，賴 144 局方得分離。<br>
+    ・<b>和／不和（武經式）</b>：由 144 局反推，規則為「大將宮與太乙宮九宮五行比和者為不和，餘為和」（實證命中 82%，比和組和率僅 11%）。<b>須注意</b>：《武經總要》係軍事實務化之再編碼，其「和」為格式化之結果標籤；《金鏡式經》〈推陰遁和不和〉另立陰陽重雜之多級量表（重陽／重陰＝次兇尤甚、雜陽／雜陰＝次兇、上和／次和／下和），二者語義不同（以金鏡分類檢武經標記僅 50.7%，等同隨機）。本系統現行採武經式，並明確標示；金鏡原生量表列為後續工作。<br>
+    ・<b>陰陽和不和（金鏡式・古籍明文）</b>：〈推陰遁和不和〉載「太乙及上、下二目就算數以相配」——太乙依九宮編號（八三四九為陽宮、二七六一為陰宮），上目（天目）、下目（始擊）依十六宮（立正宮為陽、立間神為陰），算數奇為陽、偶為陰；<b>位與算同氣為「重」（重陽／重陰，不和），異氣為「陰陽和」（和則吉）</b>。原文另分重／雜二等與上和、次和、下和三級，然分級依據於現存抄本不足（33 兼列重陽與上和；「二十六未亥」疑為「二、六」連寫之訛），故本系統僅實作二元判定，分級列為待考。<br>
+    ・<b>兩套「和」不可混用</b>：金鏡之「和」建立於陰陽重雜之原理（位×算），武經之「和」為軍占格式化之結果標籤（大將宮五行比和）。以金鏡分類檢武經標記僅 50.7%（等同隨機），足證二者語義不同。惟二者哲理同構——皆以「同氣相重／相爭則不和」為本。系統同時顯示，各標其源。<br>
+    ・<b>局勢判讀（時計）</b>：採《武經總要》立成局之斷語句型。144 局實證顯示：利客者必「見陣利先動」（34/34）、利主者必「後動」（23/23）；出軍方位與陣形、旗色之對應零例外（正東→銳陣赤旗、西南→方陣白旗、東北→直陣青旗、正北→曲陣黑旗、正南→圓陣黃旗…）；戰利方位恆為出軍方位之對沖。本系統以得利一方大將所居之宮定出軍方位，其餘依實證映射查表，不強推五行公式。<br>
+    ・<b>勝負原理</b>：《金鏡式經》「客以多算臨少，主人敗；客以少算臨多，主人勝」——主客算之比較方向為古籍明文，惟評分之權重刻度為自訂模型。<br>
+    ・孤陽（算 10、30）、孤陰（算 40）依金鏡卷六與武經實證。<br>
     ・時計積時錨點：《推時計差法》原刻本「全數二十六萬〈闕〉千八百四十三」千位闕字，四庫館臣已標明缺文，故絕對積時無從復原。本系統以卷一例局（724年立冬後六日申時 ≡ 陰遁二十七局）反推錨定；校準後計神獨立命中例局所載「午為計神」，為零自由度之交叉驗證。主客算值域上限 40，與卷六「算得四十為無人」相符。<br>
-    ・真太陽時模組：經度差＋均時差（Meeus 28.3）之純天文換算，僅定時辰用；農曆朔氣維持 UTC+8 慣例。<br>
+    ・真太陽時：經度差＋均時差（Meeus 28.3）之純天文換算，僅用於定時辰（已併入起局面板，改動任一欄位即時重算）；農曆朔氣（正月初一、節氣）依現代曆法慣例維持 UTC+8，不受影響。<br>
     ・始擊推進未套用乾坤重留（文獻未提及，按字面實作純推進）。本工具供術數研究與學習用途。
   </footer>
 </div>
@@ -463,6 +474,48 @@ const SCHOOLS={
 const mod0=(a,m)=>((a%m)+m)%m;
 const mod1=(a,m)=>{const r=mod0(a,m);return r===0?m:r;};
 
+// 九宮數（1–9，跳過5）之顯示：卦名＋所對應之十六宮神名
+function gName(g){
+  const gua={1:"乾",2:"離",3:"艮",4:"震",6:"兌",7:"坤",8:"坎",9:"巽"}[g];
+  if(!gua)return `${g}宮`;
+  const p16={1:15,2:9,3:3,4:5,6:13,7:11,8:1,9:7}[g];
+  return `${g}宮・${gua}（${P16[p16-1].shen}）`;
+}
+
+// ============================================================
+// 術語簡述（點擊統計卡「?」展開）
+// ============================================================
+const GLOSS={
+  lunarYear:["農曆年／干支","太乙年計以農曆年為最小單位，同一農曆年內任何月日排出的局面完全相同。干支為該年之歲次。","astro"],
+  cny:["正月初一","年計歲首（使用者裁定）。由定朔定氣天文演算法即時推算，非查表。","astro"],
+  jiNian:["太乙積年","自積年錨點起算之年數。本系統依《崇禎曆書》1627 年冬至為積年 1（使用者裁定），非古典上元積年。錨點更動會改變整張盤。","user"],
+  ju:["入局","積年（或時實）除以 72 之餘數。72 局為太乙盤一完整循環。","guji"],
+  taiyi:["太乙落宮","太乙為北極之神、天帝之尊神，只行八正宮，不入中五宮。三年（時）一遷，所駐之宮即當年（時）氣運所鍾。","guji"],
+  li:["理天／理地／理人","太乙駐一宮凡三年（時）：首為理天，主天道；次為理地，主地道；三為理人，主人事。判事時當視所處之年而定其應。","guji"],
+  jishen:["計神","歲星（木星）之使，十二年一周天。本身不主吉凶，用以定始擊之落宮——「計神加和德」。","guji"],
+  wenchang:["文昌／天目（主目）","主方之目。《金鏡式經》卷二：「下目者中宮鎮星之精」，屬主。為主算之起點，主方視野與謀略所繫。","guji"],
+  shiji:["始擊／客目（下目）","客方之目，主外敵所在。由計神加和德而定。為客算之起點；若臨太乙宮則成「掩」，主掩襲劫殺。","guji"],
+  zhuSuan:["主算","主方之力量數。自天目起，順行累加所經八正宮之太乙編號至太乙宮前止。算大於十為長算（力盛），小於十為短算（力弱），等於十為太微算（數滿則溢，宜守）。","guji"],
+  keSuan:["客算","客方之力量數。算法同主算，惟起點為始擊。《金鏡式經》：「客以多算臨少，主人敗；客以少算臨多，主人勝。」","guji"],
+  zhuJiang:["主大將／主參將","主方兵力所寄。大將＝主算之個位（個位為零則取十位）；參將＝大將×3 同法。將「發」則利戰，「囚」「迫」則宜守。","guji"],
+  keJiang:["客大將／客參將","客方兵力所寄，算法同主將，本於客算。主客大將同宮為「關」，兩軍主力正面對峙。","guji"],
+  sancai:["數象（三才數）","《金鏡式經》卷六：天為十、地為五、人為一。拆解算數，三者俱備為「三才數」；缺項則稱無天、無地、無人數，主相應層面之咎。","guji"],
+  hebuhe:["和／不和","金鏡式：太乙及上、下二目各就算數相配，位與算同氣為「重」（不和），異氣為「陰陽和」（吉）。武經式：大將宮與太乙宮九宮五行比和者為「不和」。二者語義不同，並列顯示。","guji"],
+  dun:["陰陽二遁","冬至後為陽遁（太乙起乾一順行），夏至後為陰遁（起巽九逆行）。三時一移。年計全局皆陽遁。","guji"],
+  shishi:["時實（積時）","自二至起算之時辰數。因《推時計差法》原刻本「全數」處闕字，絕對起點已佚，本系統以金鏡卷一例局反推錨定。","custom"]
+};
+
+// ============================================================
+// 武經總要斷語模板（144 立成局實證映射，零例外）
+// ============================================================
+const WJ_DIR={   // 出軍方位 → 陣形＋旗色（實證映射：7/7、11/11、10/10…）
+  "正東":["銳陣","赤"],"東南":["銳陣","赤"],"正南":["圓陣","黃"],"西南":["方陣","白"],
+  "正西":["方陣","白"],"西北":["曲陣","黑"],"正北":["曲陣","黑"],"東北":["直陣","青"]
+};
+const WJ_OPP={"正東":"正西","正西":"正東","正南":"正北","正北":"正南","東北":"西南","西南":"東北","東南":"西北","西北":"東南"};
+// 九宮 → 方位
+const GONG_DIR={1:"正北",2:"西南",3:"正東",4:"東南",6:"西北",7:"正西",8:"東北",9:"正南"};
+
 // ============================================================
 // 時計核心（金鏡系）：規則全數經卷一例局驗證
 // ============================================================
@@ -516,14 +569,75 @@ function h_jishen(shishi,yin){
   return{pos:ZHI12[mod0(idx-(r-1),12)],r};
 }
 const h_shiji=(tm,js)=>mod0(tm-1+mod0(HOUR_CFG.shiji.anchor-js,16),16)+1;
+// 主客算累加法：起含、間神＋1、順行累加所經八正宮之太乙編號、至太乙宮前止
+// 邊界（武經144局實證）：星曜與太乙同宮（囚格）時，只累加自身
 function h_suan(start,taiyiP16){
-  let sum=0,p=start,steps=0;
+  let sum=0;
   if(P16[start-1].type==="間")sum+=1;
-  if(P16_TO_TID[p])sum+=P16_TO_TID[p];
+  if(P16_TO_TID[start])sum+=P16_TO_TID[start];
+  if(start===taiyiP16)return sum;
+  let p=start,steps=0;
   while(steps<20){p=p%16+1;steps++;if(p===taiyiP16)break;if(P16_TO_TID[p])sum+=P16_TO_TID[p];}
   return sum;
 }
-const h_jiang=n=>{const r=n%10;return r===0?10:r;};
+// 將法（古籍明文）：《太乙金鏡式經》「若得十，置一；若得二十四，棄二十，置四」
+//   → 個位非零取個位（24→4）；個位為零取十位（10→1）
+//   武經總要 144 局實證命中 96.2%（舊傳「棄十法」令 10→10宮，僅 88.9%，為後人誤傳）
+const h_jiang=n=>{const r=n%10;return r!==0?r:Math.floor(n/10);};
+
+// 九宮洛書五行（供和／不和判定）
+const GONG_WX={1:"水",2:"土",3:"木",4:"木",5:"土",6:"金",7:"金",8:"土",9:"火"};
+const WX_SHENG={"木":"火","火":"土","土":"金","金":"水","水":"木"};
+const WX_KE={"木":"土","土":"水","水":"火","火":"金","金":"木"};
+function gongRel(jiangGong,taiyiGong){
+  const a=GONG_WX[jiangGong],b=GONG_WX[taiyiGong];
+  if(!a||!b)return null;
+  if(a===b)return{r:"比和",d:`將宮與太乙宮同屬${a}`};
+  if(WX_SHENG[b]===a)return{r:"太乙生將",d:`太乙宮${b}生將宮${a}`};
+  if(WX_SHENG[a]===b)return{r:"將生太乙",d:`將宮${a}生太乙宮${b}`};
+  if(WX_KE[b]===a)return{r:"太乙克將",d:`太乙宮${b}克將宮${a}`};
+  if(WX_KE[a]===b)return{r:"將克太乙",d:`將宮${a}克太乙宮${b}`};
+  return null;
+}
+// 和／不和（武經144局實證推定，82%）：將宮與太乙宮五行比和者為「不和」，餘為「和」
+function heJudge(jiangGong,taiyiGong){
+  const rel=gongRel(jiangGong,taiyiGong);
+  if(!rel)return null;
+  return{he:rel.r!=="比和",rel:rel.r,desc:rel.d};
+}
+// 孤陽／孤陰（金鏡卷六；武經實證：10、30 標孤陽，40 標孤陰）
+function guJudge(n){
+  if(n===10||n===30)return{t:"孤陽",d:"陽數獨亢，無地無人之助"};
+  if(n===40)return{t:"孤陰",d:"數極而無人，陰盛之象"};
+  return null;
+}
+
+// ── 金鏡原生「陰陽和不和」（〈推陰遁和不和〉張良經＋王希明注）──
+// 機制：位之陰陽 × 算之陰陽，同性為「重」(不和)、異性為「和」(吉)
+// 太乙之位：八三四九為陽宮、二七六一為陰宮（九宮專屬編號，原文明列）
+// 上目(天目)、下目(始擊)之位：立正宮為陽、立間神為陰（十六宮，原文明列）
+// 算數之陰陽：奇為陽數、偶為陰數（原文「算十一…三十九為陽數」「二十二…二十八為陰」）
+const TAIYI_YANG_GONG=[8,3,4,9],TAIYI_YIN_GONG=[2,7,6,1];
+function jjHe(posYY,suan){
+  if(!posYY)return null;
+  const sy=suan%2===1?"陽":"陰";
+  const he=posYY!==sy;
+  return{he,posYY,suanYY:sy,
+    t:he?"陰陽和":(sy==="陽"?"重陽":"重陰"),
+    d:he?`位${posYY}而算${sy}，陰陽相配為和，和則吉`
+        :`位${posYY}而算${sy}，同氣相重，故不和`};
+}
+const taiyiPosYY=t9=>TAIYI_YANG_GONG.includes(t9)?"陽":(TAIYI_YIN_GONG.includes(t9)?"陰":null);
+const muPosYY=p16=>p16%2===1?"陽":"陰";   // 正宮陽、間神陰
+// 三者各自相配（原文：「太乙及上、下二目就算數以相配」）
+function jjHeAll(taiyiId,tianmuP16,shijiP16,zhuSuan,keSuan){
+  return{
+    taiyiZhu:jjHe(taiyiPosYY(taiyiId),zhuSuan),
+    taiyiKe :jjHe(taiyiPosYY(taiyiId),keSuan),
+    shangMu :jjHe(muPosYY(tianmuP16),zhuSuan),   // 上目配主算
+    xiaMu   :jjHe(muPosYY(shijiP16),keSuan)      // 下目配客算
+  };
+}
 
 // 積時錨點：以 724 年立冬後六日申時 ≡ 陰遁27局 反推（模組載入時計算一次）
 let HOUR_OFFSET=null;
@@ -548,8 +662,8 @@ function computeHour(year,month,day,hh,mm,useTST,lonDeg){
   let h=hh,m=mm,dayShift=0,tstNote="";
   if(useTST&&!isNaN(lonDeg)){
     const civilMin=hh*60+mm;
-    const jdUT=jdFromGregorian(year,month,day)+(civilMin/60-8)/24;
-    const lonCorr=(lonDeg-120)*4, eot=equationOfTime(jdUT);
+    const jdUT=jdFromGregorian(year,month,day)+(civilMin/60-tzOffHours)/24;
+    const lonCorr=(lonDeg-tzCentralMeridian)*4, eot=equationOfTime(jdUT);
     let tMin=civilMin+lonCorr+eot;
     if(tMin<0){tMin+=1440;dayShift=-1;}
     if(tMin>=1440){tMin-=1440;dayShift=1;}
@@ -589,7 +703,9 @@ function computeHour(year,month,day,hh,mm,useTST,lonDeg){
   push(`主算：自天目 ${pName(TM.pos)} 起（含），順行累加所經八正宮之太乙編號至太乙宮前止${P16[TM.pos-1].type==="間"?"，起於間神加一":""} ＝ <b>${zhu}</b>`,"guji");
   push(`客算：自始擊 ${pName(SJ)} 起，同法累加 ＝ <b>${ke}</b>`,"guji");
   const zhuDa=h_jiang(zhu),zhuCan=h_jiang(h_jiang(zhu)*3),keDa=h_jiang(ke),keCan=h_jiang(h_jiang(ke)*3);
-  push(`四將（棄十法）：主大將 ${zhuDa}宮、主參將 ${zhuCan}宮、客大將 ${keDa}宮、客參將 ${keCan}宮`,"guji");
+  push(`四將（個位非零取個位、為零取十位；參將＝大將×3同法）：主大將 ${zhuDa}宮、主參將 ${zhuCan}宮、客大將 ${keDa}宮、客參將 ${keCan}宮`,"guji");
+
+  const zhuHe=heJudge(zhuDa,T.id),keHe=heJudge(keDa,T.id);
   const zhuSC=sanCai(zhu),keSC=sanCai(ke);
   push(`數象：主算 ${zhu}＝${zhuSC.decomp} → <b>${zhuSC.label}</b>；客算 ${ke}＝${keSC.decomp} → <b>${keSC.label}</b>（金鏡卷六）`,"guji");
 
@@ -597,8 +713,22 @@ function computeHour(year,month,day,hh,mm,useTST,lonDeg){
     :(n===10?{t:"太微算",d:label==="主算"?"數滿則溢，主方只宜固守":"客攻勢至極而止",cls:"gold"}
     :{t:"短算",d:label==="主算"?"主方兵力疲弱，主凶":"客方後勁不足",cls:"verm"});
   const zhuO={total:zhu,judge:judge(zhu,"主算"),sc:zhuSC},keO={total:ke,judge:judge(ke,"客算"),sc:keSC};
+  zhuO.he=zhuHe; keO.he=keHe;
+  zhuO.gu=guJudge(zhu); keO.gu=guJudge(ke);
+  // 金鏡原生和不和（三者相配）
+  const jj=jjHeAll(T.id,TM.pos,SJ,zhu,ke);
+  zhuO.jj=jj.shangMu; keO.jj=jj.xiaMu;
+  push(`陰陽和不和〔<b>金鏡式</b>〕：太乙居${T.id}宮為<b>${taiyiPosYY(T.id)}位</b>；上目(天目)${pName(TM.pos)}為${muPosYY(TM.pos)}位（${TM.pos%2===1?"正宮":"間神"}）；下目(始擊)${pName(SJ)}為${muPosYY(SJ)}位（${SJ%2===1?"正宮":"間神"}）。`+
+    `上目配主算 ${zhu}（${zhu%2===1?"陽":"陰"}數）→ <b>${jj.shangMu.t}</b>；下目配客算 ${ke}（${ke%2===1?"陽":"陰"}數）→ <b>${jj.xiaMu.t}</b>；`+
+    `太乙配主算 → ${jj.taiyiZhu.t}，配客算 → ${jj.taiyiKe.t}　〔位與算同氣為重（不和），異氣為和。原文另分重／雜與上、次、下和三級，然分級依據於現存抄本不足（33 兼列重陽與上和，「二十六未亥」疑為「二、六」連寫之訛），故本系統僅實作二元判定，分級列為待考〕`,"guji");
+  if(zhuHe&&keHe)push(`和／不和〔<b>武經式</b>〕：主大將 ${zhuDa}宮（${GONG_WX[zhuDa]}）對太乙 ${T.id}宮（${GONG_WX[T.id]}）＝${zhuHe.rel} → 主算<b>${zhuHe.he?"和":"不和"}</b>；客大將 ${keDa}宮（${GONG_WX[keDa]}）＝${keHe.rel} → 客算<b>${keHe.he?"和":"不和"}</b>　〔比和者為「不和」（同氣相爭、勢不兩立）。此為《武經總要》144 立成局反推之結果標籤，命中 82%；<b>金鏡系之「和」另有陰陽重雜之多級量表，語義不同，不可混用</b>〕`,"modern");
+  if(zhuO.gu||keO.gu)push(`孤陽孤陰：${zhuO.gu?`主算 ${zhu} 為<b>${zhuO.gu.t}</b>（${zhuO.gu.d}）`:""}${zhuO.gu&&keO.gu?"；":""}${keO.gu?`客算 ${ke} 為<b>${keO.gu.t}</b>（${keO.gu.d}）`:""}`,"guji");
   const S=SCHOOLS.taojin;
-  const pat=detectPatterns({taiyiP16:T.p16,wenchang:TM.pos,shiji:SJ,zhuDa,zhuCan,keDa,keCan},S,yin);
+  // 四將為九宮數，需換算為十六宮編號方能與太乙、星曜比較宮位
+  const G2P16={1:15,2:9,3:3,4:5,6:13,7:11,8:1,9:7};
+  const pat=detectPatterns({taiyiP16:T.p16,wenchang:TM.pos,shiji:SJ,
+    zhuDa:G2P16[zhuDa]||zhuDa,zhuCan:G2P16[zhuCan]||zhuCan,
+    keDa:G2P16[keDa]||keDa,keCan:G2P16[keCan]||keCan},S,yin);
   if(pat.length)push(`格局偵測：觸發 <b>${pat.map(x=>x.name).join("、")}</b>（陰陽遁前後方向依運行方向判定）`,"guji");
   else push(`格局偵測：掩、迫、擊、關、囚皆未觸發`,"guji");
   const sc=scoreOf(zhuO,keO,pat,S);
@@ -607,7 +737,8 @@ function computeHour(year,month,day,hh,mm,useTST,lonDeg){
   return{system:"hour",year,month,day,hh:h,mm:m,branch:BRANCHES[branchIdx],yin,shishi,ju,off,
     taiyiId:T.id,taiyiP16:T.p16,taiyiGua:T.gua,stayYear:T.stay,liName:T.li,
     wenchang:TM.pos,jishen:JS.pos,shiji:SJ,zhu:zhuO,ke:keO,
-    zhuDa,zhuCan,keDa,keCan,patterns:pat,score:sc.score,grade:sc.grade,scoreLog:sc.log,radar,steps};
+    zhuDa,zhuCan,keDa,keCan,zhuHe,keHe,zhuGu:zhuO.gu,keGu:keO.gu,jjHe:jj,
+    patterns:pat,score:sc.score,grade:sc.grade,scoreLog:sc.log,radar,steps};
 }
 
 // ===== 共用：格局偵測 / 評分 / 雷達（年計時計共用）=====
@@ -644,7 +775,7 @@ function detectPatterns(r,S,yin){
 function scoreOf(zhu,ke,patterns,S){
   const W=S.scoring;
   let score=(zhu.total-ke.total)*W.wDiff,proZhu=0,proKe=0;
-  const log=[`基礎分＝(主算${zhu.total}−客算${ke.total})×${W.wDiff}＝${score>0?"+":""}${score}`];
+  const log=[`基礎分＝(主算${zhu.total}−客算${ke.total})×${W.wDiff}＝${score>0?"+":""}${score}〔比較方向依金鏡「客以多算臨少，主人敗；客以少算臨多，主人勝」為古籍明文；權重刻度為自訂〕`];
   for(const pt of patterns){
     let adj=0;
     if(pt.name==="掩")adj=W.yanPenalty;
@@ -958,7 +1089,20 @@ function drawMarkers(r){
 // ============================================================
 const EV_LABEL={guji:["guji","古籍明文"],user:["user","使用者裁定"],astro:["astro","天文計算"],custom:["custom","自訂待考"],modern:["modern","現代整理"]};
 const evBadge=ev=>`<span class="ev ${EV_LABEL[ev][0]}">${EV_LABEL[ev][1]}</span>`;
-const statCard=(k,v,cls,ev)=>`<div class="stat"><div class="k">${k}${ev?evBadge(ev):""}</div><div class="v ${cls||""}">${v}</div></div>`;
+const statCard=(k,v,cls,ev,gk)=>`<div class="stat"><div class="k">${k}${ev?evBadge(ev):""}${gk&&GLOSS[gk]?`<span class="qmark" data-g="${gk}" title="說明">?</span>`:""}</div><div class="v ${cls||""}">${v}</div></div>`;
+
+function showGloss(gk){
+  const g=GLOSS[gk];
+  if(!g)return;
+  document.getElementById("shenInfo").innerHTML=
+    `<span class="sn">${g[0]}</span><span class="ev ${g[2]}">${EV_LABEL[g[2]][1]}</span><br>${g[1]}`;
+  document.getElementById("shenInfo").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function bindGloss(){
+  document.querySelectorAll(".qmark").forEach(el=>{
+    el.onclick=()=>showGloss(el.dataset.g);
+  });
+}
 
 function render(r){
   const isHour=r.system==="hour";
@@ -975,23 +1119,23 @@ function render(r){
   document.getElementById("statGrid").innerHTML=
     (isHour
       ? statCard("時辰",`${String(r.hh).padStart(2,"0")}:${String(r.mm).padStart(2,"0")} <span class="zh">${r.branch}時</span>`,"","astro")+
-        statCard("遁局",`<span class="zh">${r.yin?"陰遁":"陽遁"}</span>`,"gold","guji")+
-        statCard("時實（積時）",`${r.shishi}`,"gold","custom")+
-        statCard("入局",`第 ${r.ju} 局 ／ 72`,"gold","guji")+
-        statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}時<span class="zh">（${r.liName}）</span>`,"gold","guji")
-      : statCard("農曆年／干支",`${r.lunarYear} <span class="zh">${r.gz.gz}年（${r.gz.animal}）</span>`,"","astro")+
-        statCard("正月初一",r.cnyStr,"","astro")+
-        statCard("太乙積年",r.jiNian,"gold","user")+
-        statCard("入局",`第 ${r.ju} 局・${["上","中","下"][r.yuanIdx]}元`,"gold","guji")+
-        statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}年<span class="zh">（${r.liName}）</span>`,"gold","guji")
+        statCard("遁局",`<span class="zh">${r.yin?"陰遁":"陽遁"}</span>`,"gold","guji","dun")+
+        statCard("時實（積時）",`${r.shishi}`,"gold","custom","shishi")+
+        statCard("入局",`第 ${r.ju} 局 ／ 72`,"gold","guji","ju")+
+        statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}時<span class="zh">（${r.liName}）</span>`,"gold","guji","taiyi")
+      : statCard("農曆年／干支",`${r.lunarYear} <span class="zh">${r.gz.gz}年（${r.gz.animal}）</span>`,"","astro","lunarYear")+
+        statCard("正月初一",r.cnyStr,"","astro","cny")+
+        statCard("太乙積年",r.jiNian,"gold","user","jiNian")+
+        statCard("入局",`第 ${r.ju} 局・${["上","中","下"][r.yuanIdx]}元`,"gold","guji","ju")+
+        statCard("太乙落宮",`<span class="zh">${r.taiyiGua}宮・${pName(r.taiyiP16)}</span><br>編號${r.taiyiId}・第${r.stayYear}年<span class="zh">（${r.liName}）</span>`,"gold","guji","taiyi")
     )+
-    statCard("計神",`<span class="zh">${pName(r.jishen)}</span>`,"","guji")+
-    statCard(isHour?"天目（主目）":"文昌／天目",`<span class="zh">${pName(r.wenchang)}</span>`,"jade","guji")+
-    statCard("始擊／客目",`<span class="zh">${pName(r.shiji)}</span>`,"verm","guji")+
-    statCard("主算",`${r.zhu.total}・<span class="zh">${r.zhu.judge.t}・${r.zhu.sc.label}</span>${r.zhu.over16?" ⚠":""}`,r.zhu.judge.cls,"guji")+
-    statCard("客算",`${r.ke.total}・<span class="zh">${r.ke.judge.t}・${r.ke.sc.label}</span>${r.ke.over16?" ⚠":""}`,r.ke.judge.cls,"guji")+
-    statCard("主大將／主參將",`<span class="zh">${pName(r.zhuDa)}／${pName(r.zhuCan)}</span>`,"jade","guji")+
-    statCard("客大將／客參將",`<span class="zh">${pName(r.keDa)}／${pName(r.keCan)}</span>`,"verm","guji");
+    statCard("計神",`<span class="zh">${pName(r.jishen)}</span>`,"","guji","jishen")+
+    statCard(isHour?"天目（主目）":"文昌／天目",`<span class="zh">${pName(r.wenchang)}</span>`,"jade","guji","wenchang")+
+    statCard("始擊／客目",`<span class="zh">${pName(r.shiji)}</span>`,"verm","guji","shiji")+
+    statCard("主算",`${r.zhu.total}・<span class="zh">${r.zhu.judge.t}・${r.zhu.sc.label}</span>${r.zhu.jj?`<br><span class="zh" style="font-size:13px;color:${r.zhu.jj.he?"#7fb0a0":"#d08573"};">${r.zhu.jj.t}<span style="font-size:10px;color:var(--muted);">(金鏡)</span></span>`:""}${r.zhu.he?`<br><span class="zh" style="font-size:12px;color:var(--muted);">${r.zhu.he.he?"和":"不和"}(武經式)</span>`:""}${r.zhu.gu?`<br><span class="zh" style="font-size:12px;">${r.zhu.gu.t}</span>`:""}`,r.zhu.judge.cls,"guji","zhuSuan")+
+    statCard("客算",`${r.ke.total}・<span class="zh">${r.ke.judge.t}・${r.ke.sc.label}</span>${r.ke.jj?`<br><span class="zh" style="font-size:13px;color:${r.ke.jj.he?"#7fb0a0":"#d08573"};">${r.ke.jj.t}<span style="font-size:10px;color:var(--muted);">(金鏡)</span></span>`:""}${r.ke.he?`<br><span class="zh" style="font-size:12px;color:var(--muted);">${r.ke.he.he?"和":"不和"}(武經式)</span>`:""}${r.ke.gu?`<br><span class="zh" style="font-size:12px;">${r.ke.gu.t}</span>`:""}`,r.ke.judge.cls,"guji","keSuan")+
+    statCard("主大將／主參將",`<span class="zh">${isHour?gName(r.zhuDa):pName(r.zhuDa)}<br>${isHour?gName(r.zhuCan):pName(r.zhuCan)}</span>`,"jade","guji","zhuJiang")+
+    statCard("客大將／客參將",`<span class="zh">${isHour?gName(r.keDa):pName(r.keDa)}<br>${isHour?gName(r.keCan):pName(r.keCan)}</span>`,"verm","guji","keJiang");
 
   // 格局判定區
   const sevColor={"凶":"var(--vermillion)","警":"#d08573","判":"var(--gold)"};
@@ -1031,6 +1175,7 @@ function render(r){
     `<span class="tag">局勢判讀</span>本${isHour?"時":"年"}太乙駐 ${r.taiyiGua}宮（${pName(r.taiyiP16)}，${r.liName}之${isHour?"時":"年"}）；主算 ${r.zhu.total}（${r.zhu.judge.t}，${r.zhu.judge.d}），客算 ${r.ke.total}（${r.ke.judge.t}，${r.ke.judge.d}）。${cmp}${patNote}
     <span style="color:var(--muted);font-size:12px;">〔長短算判定為古籍明文；本段綜合比較文字為現代整理表述，非古籍原文。〕</span>${warn}`;
 
+  bindGloss();
   renderSummary(r);
   renderRadar(r);
   document.getElementById("auditBody").innerHTML=r.steps.map((s,i)=>
@@ -1061,6 +1206,7 @@ function runCalc(){
     err.textContent="⚠ "+e.message;
     err.style.display="block";
   }
+  if(document.getElementById("inSystem").value==="hour")tstPreview();
 }
 function syncSystemUI(){
   const hour=document.getElementById("inSystem").value==="hour";
@@ -1074,10 +1220,16 @@ function syncSystemUI(){
 buildBoard();
 document.getElementById("calcBtn").addEventListener("click",runCalc);
 document.getElementById("inSystem").addEventListener("change",syncSystemUI);
-document.getElementById("useTST").addEventListener("change",runCalc);
-document.getElementById("inTime").addEventListener("input",runCalc);
+// 時計相關欄位：任一變動即時重算並更新真太陽時顯示
+for(const id of["useTST","inTime","tsLon"]){
+  document.getElementById(id).addEventListener("input",runCalc);
+  document.getElementById(id).addEventListener("change",runCalc);
+}
 for(const id of["inYear","inMonth","inDay"]){
   document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")runCalc();});
+  document.getElementById(id).addEventListener("input",()=>{
+    if(document.getElementById("inSystem").value==="hour")runCalc();
+  });
 }
 
 // ============================================================
@@ -1089,10 +1241,33 @@ function percentileOf(score){
   const below=scores.filter(x=>x<score).length,eq=scores.filter(x=>x===score).length;
   return Math.round((below+eq*0.5)/scores.length*100);
 }
+function wjVerdict(r){
+  // 武經斷語模板：算之長短和不和 → 利主/利客 → 先動/後動 → 出軍方位 → 戰利 → 陣旗 → 反方之戒
+  const liKe=r.ke.total>r.zhu.total;          // 客算長於主算 → 利客
+  const win=liKe?"客":"主";
+  const winDa=liKe?r.keDa:r.zhuDa;            // 得利方之大將宮（九宮數）
+  const dir=GONG_DIR[winDa];
+  if(!dir)return null;
+  const [zhen,qi]=WJ_DIR[dir];
+  const battle=WJ_OPP[dir];
+  const move=liKe?"先動":"後動";
+  const wSuan=liKe?r.ke:r.zhu, lSuan=liKe?r.zhu:r.ke;
+  const wHe=liKe?r.keHe:r.zhuHe, lHe=liKe?r.zhuHe:r.keHe;
+  return{win,dir,battle,zhen,qi,move,
+    line1:`${win}算 <b>${wSuan.total}</b>（${wSuan.judge.t}${wHe?`・${wHe.he?"和":"不和"}`:""}），${liKe?"客":"主"}方氣數較盛`,
+    line2:`利為<b>${win}</b>，見陣利<b>${move}</b>`,
+    line3:`出軍宜<b>${dir}</b>，戰利<b>${battle}</b>；用<b>${zhen}</b>，舉<b>${qi}旗</b>`,
+    line4:`${liKe?"主":"客"}方算 ${lSuan.total}（${lSuan.judge.t}${lHe?`・${lHe.he?"和":"不和"}`:""}），宜固守，聞賊備${battle}`};
+}
+
 function renderSummary(r){
   const hasYan=r.patterns.some(p=>p.name==="掩");
   let headline;
   if(hasYan)headline="凶局：現掩襲之象，客方佔絕對優勢，主方切忌輕舉";
+  else if(r.system==="hour"){
+    const wj=wjVerdict(r);
+    headline=wj?`此局利為${wj.win}，見陣利${wj.move}`:"主客勢均，各宜固守";
+  }
   else headline={"大利主":"主方全面佔優之年","利主":"主方形勢有利之年","均勢膠著":"主客勢均，成敗繫於細節之年","利客":"客方形勢有利，主方宜守之年","大利客／主凶":"客方大優，主方非常之年"}[r.grade];
   const tips=[];
   tips.push(`主算 <b>${r.zhu.total}（${r.zhu.judge.t}・${r.zhu.sc.label}）</b> 對 客算 <b>${r.ke.total}（${r.ke.judge.t}・${r.ke.sc.label}）</b>，太乙駐${r.taiyiGua}宮${r.liName}`);
@@ -1112,10 +1287,25 @@ function renderSummary(r){
     const pct=percentileOf(r.score);
     tips.push(`歷史定位：本年評分（${r.score>0?"+":""}${r.score}）高於 1950–2050 區間約 <b>${pct}%</b> 的年份`);
   }else{
-    tips.push(`時計盤：${r.yin?"陰遁":"陽遁"}第 ${r.ju} 局，主客算值域 1–40（金鏡累加法）`);
+    const wj=wjVerdict(r);
+    if(wj&&!hasYan){
+      tips.length=0;   // 時計改用武經斷語，取代通用條列
+      tips.push(wj.line1);
+      tips.push(wj.line2);
+      tips.push(wj.line3);
+      for(const p of r.patterns.slice(0,1)){
+        tips.push(`本局觸發<b>${p.name}</b>格：${p.desc.replace(/<[^>]+>/g,"").split("——")[1]||p.desc.replace(/<[^>]+>/g,"")}`);
+      }
+      tips.push(wj.line4);
+    }else{
+      tips.push(`時計盤：${r.yin?"陰遁":"陽遁"}第 ${r.ju} 局，主客算值域 1–40（金鏡累加法）`);
+    }
   }
+  const note=r.system==="hour"
+    ? `<div style="margin-top:10px;font-size:10.5px;color:var(--muted);line-height:1.8;">斷語格式依《武經總要》卷十九、二十立成局之句型（算之長短和不和 → 利主／利客 → 先動／後動 → 出軍方位 → 戰利 → 陣形旗色 → 反方之戒）。方位對應陣形與旗色之映射由 144 局實證取得（各方位零例外）；出軍方位取得利一方大將所居之宮。</div>`
+    : `<div style="margin-top:10px;font-size:10.5px;color:var(--muted);">長短算判定為古籍明文；綜合比較文字為現代整理表述。</div>`;
   document.getElementById("summaryCard").innerHTML=
-    `<div class="headline">${headline}</div><ul>${tips.slice(0,5).map(t=>`<li>${t}</li>`).join("")}</ul>`;
+    `<div class="headline">${headline}</div><ul>${tips.slice(0,5).map(t=>`<li>${t}</li>`).join("")}</ul>${note}`;
 }
 
 // ============================================================
@@ -1152,67 +1342,62 @@ function renderRadar(r){
 }
 
 // ============================================================
-// 真太陽時換算（時計預備；純天文計算）
+// 真太陽時（純天文計算）：即時併入起局面板
 // ============================================================
 const tzOffHours=-(new Date().getTimezoneOffset())/60;
 const tzCentralMeridian=tzOffHours*15;
 const tzName=(typeof Intl!=="undefined"&&Intl.DateTimeFormat)?Intl.DateTimeFormat().resolvedOptions().timeZone:"裝置時區";
-let tsLonTouched=false;
 
-function tsUpdate(){
-  const dv=document.getElementById("tsDate").value;
-  const tv=document.getElementById("tsTime").value;
-  const lon=parseFloat(document.getElementById("tsLon").value);
+// 依起局面板現值計算真太陽時，並更新即時顯示；回傳供 computeHour 使用
+function tstPreview(){
   const out=document.getElementById("tsOut");
-  if(!dv||!tv||isNaN(lon)){out.innerHTML="請填齊日期、時刻與經度。";return;}
-  const[y,mo,d]=dv.split("-").map(Number);
-  const[hh,mi]=tv.split(":").map(Number);
+  const useTST=document.getElementById("useTST").checked;
+  const row=document.getElementById("tstRow");
+  row.style.opacity=useTST?"1":"0.45";
+  const y=parseInt(document.getElementById("inYear").value);
+  const mo=parseInt(document.getElementById("inMonth").value);
+  const d=parseInt(document.getElementById("inDay").value);
+  const tv=(document.getElementById("inTime").value||"12:00").split(":");
+  const hh=parseInt(tv[0]),mi=parseInt(tv[1]);
+  const lon=parseFloat(document.getElementById("tsLon").value);
+  if(!y||!mo||!d||isNaN(hh)){out.innerHTML="—";return;}
+  if(!useTST){
+    const bi=Math.floor((((hh*60+mi)/60+1)%24)/2);
+    out.innerHTML=`未啟用真太陽時修正，以裝置標準時定時辰：<b style="color:var(--gold);">${String(hh).padStart(2,"0")}:${String(mi).padStart(2,"0")}</b> → <b style="color:var(--gold);font-family:'Noto Serif TC',serif;">${BRANCHES[bi]}時</b>`;
+    return;
+  }
+  if(isNaN(lon)){out.innerHTML='<span style="color:#d08573;">請輸入地理經度，或按「使用裝置定位」。</span>';return;}
   const civilMin=hh*60+mi;
   const jdUT=jdFromGregorian(y,mo,d)+(civilMin/60-tzOffHours)/24;
-  const lonCorr=(lon-tzCentralMeridian)*4;           // 經度差（分）
-  const eot=equationOfTime(jdUT);                    // 均時差（分）
-  let trueMin=civilMin+lonCorr+eot;
-  let dayShift=0;
-  if(trueMin<0){trueMin+=1440;dayShift=-1;}
-  if(trueMin>=1440){trueMin-=1440;dayShift=1;}
-  const th=Math.floor(trueMin/60),tm=Math.round(trueMin%60);
+  const lonCorr=(lon-tzCentralMeridian)*4, eot=equationOfTime(jdUT);
+  let tMin=civilMin+lonCorr+eot, shift=0;
+  if(tMin<0){tMin+=1440;shift=-1;}
+  if(tMin>=1440){tMin-=1440;shift=1;}
+  const th=Math.floor(tMin/60),tm=Math.round(tMin%60);
+  const bi=Math.floor((((tMin/60)+1)%24)/2);
   const fmt=v=>(v>=0?"+":"−")+Math.abs(v).toFixed(1);
-  const branchIdx=Math.floor((((trueMin/60)+1)%24)/2);
-  const branch=BRANCHES[branchIdx];
   out.innerHTML=
-    `裝置時區：${tzName}（UTC${tzOffHours>=0?"+":""}${tzOffHours}，中央經線 ${tzCentralMeridian}°）<br>`+
-    `標準時 ${String(hh).padStart(2,"0")}:${String(mi).padStart(2,"0")}`+
-    `　經度差 ${fmt(lonCorr)} 分（經度 ${lon}° − 中央經線 ${tzCentralMeridian}°，每度 4 分）<br>`+
-    `　均時差 ${fmt(eot)} 分（Meeus 28.3）<br>`+
-    `→ 真太陽時 <b style="color:var(--gold);">${String(th).padStart(2,"0")}:${String(tm).padStart(2,"0")}</b>${dayShift?`（跨${dayShift>0?"次":"前"}日）`:""}`+
-    ` → <b style="color:var(--gold);font-family:'Noto Serif TC',serif;">${branch}時</b>${branch==="子"?"（跨日歸屬待時計模組裁決）":""}`;
+    `裝置時區 ${tzName}（UTC${tzOffHours>=0?"+":""}${tzOffHours}，中央經線 ${tzCentralMeridian}°）<br>`+
+    `標準時 ${String(hh).padStart(2,"0")}:${String(mi).padStart(2,"0")}　經度差 ${fmt(lonCorr)} 分　均時差 ${fmt(eot)} 分<br>`+
+    `→ 真太陽時 <b style="color:var(--gold);">${String(th).padStart(2,"0")}:${String(tm).padStart(2,"0")}</b>${shift?`（跨${shift>0?"次":"前"}日）`:""}`+
+    ` → <b style="color:var(--gold);font-family:'Noto Serif TC',serif;letter-spacing:1px;">${BRANCHES[bi]}時</b>`+
+    `${BRANCHES[bi]==="子"?'　<span style="color:var(--muted);">子時歸次日</span>':""}`;
 }
+
 (function(){
   const d=new Date();
-  document.getElementById("tsDate").value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  document.getElementById("tsTime").value=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   document.getElementById("tsLon").value=tzCentralMeridian.toFixed(2);
-  document.getElementById("tsLonHint").textContent=`⚠ 預設值 ${tzCentralMeridian}° 為時區中央經線，請改為你實際所在經度（例：台北約 121.56、台中約 120.68、高雄約 120.30），或按「使用裝置定位」。`;
-  for(const id of["tsDate","tsTime","tsLon"]){
-    document.getElementById(id).addEventListener("input",()=>{
-      if(id==="tsLon"){tsLonTouched=true;document.getElementById("tsLonHint").style.display="none";}
-      tsUpdate();
-    });
-  }
+  document.getElementById("tsLonHint").innerHTML=`⚠ 預設 ${tzCentralMeridian}° 為時區中央經線，非實際所在地。請改為實際經度（台北約 121.56、台中 120.68、高雄 120.30），或按「使用裝置定位」。`;
   document.getElementById("tsGeo").addEventListener("click",()=>{
-    if(typeof navigator==="undefined"||!navigator.geolocation){
-      document.getElementById("tsLonHint").textContent="此環境不支援定位，請手動輸入經度。";return;
-    }
+    const hint=document.getElementById("tsLonHint");
+    if(typeof navigator==="undefined"||!navigator.geolocation){hint.textContent="此環境不支援定位，請手動輸入經度。";return;}
     navigator.geolocation.getCurrentPosition(pos=>{
       document.getElementById("tsLon").value=pos.coords.longitude.toFixed(2);
-      document.getElementById("tsLonHint").textContent=`✓ 已取得裝置經度 ${pos.coords.longitude.toFixed(2)}°`;
-      document.getElementById("tsLonHint").style.color="#7fb0a0";
-      tsUpdate();
-    },()=>{
-      document.getElementById("tsLonHint").textContent="⚠ 定位未授權，請手動輸入實際經度。";
-    });
+      hint.innerHTML=`✓ 已取得裝置經度 ${pos.coords.longitude.toFixed(2)}°`;
+      hint.style.color="#7fb0a0";
+      runCalc();
+    },()=>{hint.innerHTML="⚠ 定位未授權，請手動輸入實際經度。";});
   });
-  tsUpdate();
 })();
 
 // ============================================================
