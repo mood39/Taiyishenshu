@@ -944,8 +944,13 @@ function drawMarkers(r){
     el.setAttribute("fill",i===r.taiyiP16?"rgba(201,162,39,0.14)":(isZheng?"rgba(201,162,39,0.055)":"rgba(18,26,46,0.55)"));
   }
   document.getElementById("hubTop").textContent=`第 ${r.ju} 局`;
-  document.getElementById("hubMid").textContent=`${["上元","中元","下元"][r.yuanIdx]}・陽遁`;
-  document.getElementById("hubBot").textContent=`積年 ${r.jiNian}`;
+  if(r.system==="hour"){
+    document.getElementById("hubMid").textContent=`${r.yin?"陰遁":"陽遁"}・${r.liName}`;
+    document.getElementById("hubBot").textContent=`時實 ${r.shishi}`;
+  }else{
+    document.getElementById("hubMid").textContent=`${["上元","中元","下元"][r.yuanIdx]}・陽遁`;
+    document.getElementById("hubBot").textContent=`積年 ${r.jiNian}`;
+  }
 }
 
 // ============================================================
