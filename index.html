@@ -263,6 +263,7 @@
     ・格局判定之「前＝順行方向下一格、後＝順行方向上一格」與「辰／宮以相鄰格屬性判別」為使用者裁定。附帶推論：太乙十六宮編號恆為奇數正宮，相鄰格必為地支間神，故現行規則下擊與迫僅會觸發「辰」型，「宮」型邏輯已實作但數學上不可達。<br>
     ・綜合評分之權重（基礎分係數、格局加減分、掩之否決門）為自訂模型，非古籍內容，可於原始碼 SCHOOLS 配置調整。<br>
     ・十六神性情（得名由來與所主之事）：多個獨立來源一致轉載之古文簡釋，標為現代整理；巽宮之神依使用者裁定採古名「大炅」（部分文獻作「大光明」，同義轉寫）。<br>
+    ・數象判讀（三才數／無天無地無人）：天＝十、地＝五、人＝一之拆解規則，多源一致，標現代整理。<br>
     ・五維雷達之「格局淨勢」換算與「神性吉凶」十六神分數表為自訂模型；白話總結卡由古籍明文判定組裝；歷史分位數以 1950–2050 區間為基準。<br>
     ・始擊推進未套用乾坤重留（文獻未提及，按字面實作純推進）。本工具供術數研究與學習用途。
   </footer>
@@ -413,6 +414,19 @@ const mod0=(a,m)=>((a%m)+m)%m;
 const mod1=(a,m)=>{const r=mod0(a,m);return r===0?m:r;};
 
 // ============================================================
+// 數象判讀：天＝十、地＝五、人＝一（現代整理）
+// ============================================================
+function sanCai(n){
+  const tens=Math.floor(n/10),r=n%10,fives=r>=5?1:0,ones=r%5;
+  const parts=[...Array(tens).fill(10),...(fives?[5]:[]),...Array(ones).fill(1)];
+  const miss=[];
+  if(tens===0)miss.push("天");
+  if(!fives)miss.push("地");
+  if(ones===0)miss.push("人");
+  return{label:miss.length===0?"三才數":"無"+miss.join("無")+"數",full:miss.length===0,decomp:parts.join("+")};
+}
+
+// ============================================================
 // 演算引擎：只讀流派配置
 // ============================================================
 function compute(year,month,day,school){
@@ -476,10 +490,13 @@ function compute(year,month,day,school){
     push(`${label}＝(太乙十六宮編號 ${tInfo.p16} − ${starName}${starNum}) mod 16＝${interval}`+
       (isJian?`，${starName}在八間神<b>隔辰＋1</b>`:`，${starName}在八正宮不加`)+
       `＝<b>${total}</b> → <b>${judge.t}</b>（${judge.d}）`,"guji");
-    return{interval,isJian,total,over16,judge};
+    return{interval,isJian,total,over16,judge,sc:sanCai(total)};
   }
   const zhu=suan("主算","文昌",wenchang);
   const ke=suan("客算","始擊",shiji);
+
+  // 數象判讀（現代整理：三才之數）
+  push(`數象：主算 ${zhu.total}＝${zhu.sc.decomp} → <b>${zhu.sc.label}</b>；客算 ${ke.total}＝${ke.sc.decomp} → <b>${ke.sc.label}</b>（天＝十、地＝五、人＝一；三才俱備為數之全，缺項傳統上主相應層面之咎）`,"modern");
 
   // 四將起法（主客大將與參將起法文獻）
   const zhuDa=mod1(zhu.total,16);
@@ -693,8 +710,8 @@ function render(r){
     statCard("計神",`<span class="zh">${pName(r.jishen)}</span>`,"","guji")+
     statCard("文昌／天目",`<span class="zh">${pName(r.wenchang)}</span>`,"jade","guji")+
     statCard("始擊／客目",`<span class="zh">${pName(r.shiji)}</span>`,"verm","guji")+
-    statCard("主算",`${r.zhu.total}・<span class="zh">${r.zhu.judge.t}</span>${r.zhu.over16?" ⚠":""}`,r.zhu.judge.cls,"guji")+
-    statCard("客算",`${r.ke.total}・<span class="zh">${r.ke.judge.t}</span>${r.ke.over16?" ⚠":""}`,r.ke.judge.cls,"guji")+
+    statCard("主算",`${r.zhu.total}・<span class="zh">${r.zhu.judge.t}・${r.zhu.sc.label}</span>${r.zhu.over16?" ⚠":""}`,r.zhu.judge.cls,"guji")+
+    statCard("客算",`${r.ke.total}・<span class="zh">${r.ke.judge.t}・${r.ke.sc.label}</span>${r.ke.over16?" ⚠":""}`,r.ke.judge.cls,"guji")+
     statCard("主大將／主參將",`<span class="zh">${pName(r.zhuDa)}／${pName(r.zhuCan)}</span>`,"jade","guji")+
     statCard("客大將／客參將",`<span class="zh">${pName(r.keDa)}／${pName(r.keCan)}</span>`,"verm","guji");
 
@@ -949,6 +966,15 @@ document.getElementById("btTable").addEventListener("click",e=>{
   }
 });
 
+// 預設帶入裝置當天日期（範圍外則保留原預設）
+(function(){
+  const d=new Date(),y=d.getFullYear();
+  if(y>=1628&&y<=2145){
+    document.getElementById("inYear").value=y;
+    document.getElementById("inMonth").value=d.getMonth()+1;
+    document.getElementById("inDay").value=d.getDate();
+  }
+})();
 buildWeightsUI();
 runCalc();
 runBacktest(1950,2050);
