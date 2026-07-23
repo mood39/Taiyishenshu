@@ -85,6 +85,15 @@
 
   #runInfo{margin:24px 0 10px;font-family:"Space Mono",monospace;font-size:12px;color:var(--jade);
     letter-spacing:.5px;line-height:1.8;}
+  /* 皇極經世紀年座標：外掛對照層，樣式與太乙本體區隔 */
+  #hjjsRow{margin:0 0 18px;padding:10px 14px;border-left:2px solid var(--panel-border);
+    background:rgba(18,26,46,.5);border-radius:2px;font-size:12px;color:var(--muted);line-height:2;}
+  #hjjsRow .hjTitle{font-family:"Noto Serif TC",serif;font-size:12px;letter-spacing:2px;color:var(--white-dim);}
+  #hjjsRow .hjPil{font-family:"Noto Serif TC",serif;font-size:14.5px;color:var(--star);letter-spacing:1px;}
+  #hjjsRow .hjPil b{font-weight:500;color:var(--gold);}
+  #hjjsRow .hjSep{color:var(--panel-border);margin:0 7px;}
+  #hjjsRow .hjNote{font-size:10.5px;color:var(--muted);line-height:1.85;margin-top:4px;}
+  #hjjsRow .hjWarn{color:var(--vermillion);}
   @media (prefers-reduced-motion: no-preference){
     #runInfo.flash{animation:flashline .8s ease-out;}
     @keyframes flashline{0%{color:#d8b23a;}100%{color:var(--jade);}}
@@ -238,6 +247,7 @@
   </div>
 
   <div id="runInfo"></div>
+  <div id="hjjsRow"></div>
   <div id="summaryCard"></div>
   <div class="stats" id="statGrid"></div>
   <div class="interp" id="interp"></div>
@@ -1387,6 +1397,60 @@ function drawMarkers(r){
 // ============================================================
 const EV_LABEL={guji:["guji","古籍明文"],user:["user","使用者裁定"],astro:["astro","天文計算"],custom:["custom","自訂待考"],modern:["modern","現代整理"]};
 const evBadge=ev=>`<span class="ev ${EV_LABEL[ev][0]}">${EV_LABEL[ev][1]}</span>`;
+
+/* ═══════════════════════════════════════════════════════════════
+   皇極經世紀年座標（外掛對照層 · 非太乙之數 · 不參與任何計算）
+   純算術：四層嵌套 12/30/12/30 加一偏移常數，無資料表。
+   錨定：西元 = 元年序 − 67017，由《皇極經世》原表雙錨互證得出
+        （帝堯甲辰＝元年序64661＝前2357；秦始皇十年甲子＝66781＝前237）
+   ═══════════════════════════════════════════════════════════════ */
+const HJJS=(()=>{
+  const ST="甲乙丙丁戊己庚辛壬癸", BR="子丑寅卯辰巳午未申酉戌亥";
+  const OFFSET=67017, YR=30, SHI=12, YUN=30, HUI=12;
+  const YR_TOT=HUI*YUN*SHI*YR;          // 129600
+  const KAIWU=76, BIWU=330;             // 開物運76、閉物運330之末
+  const CND="〇一二三四五六七八九";
+  function num4(n){const U=["","十","百","千"],s=String(n),L=s.length;let o="";
+    for(let i=0;i<L;i++){const d=+s[i],p=L-1-i;if(!d)continue;
+      o+=(d===1&&p===1&&!o)?"":CND[d]; o+=U[p];}
+    return o;}
+  function num2cn(n){if(n<10000)return num4(n);
+    const w=Math.floor(n/10000),r=n%10000;return num4(w)+"萬"+(r?num4(r):"");}
+  const gzOf=n=>ST[(n-1)%10]+BR[(n-1)%12];
+  function coord(ceYear){                // ceYear 為公元後之年（本引擎範圍 1628–2145）
+    const abs=ceYear+OFFSET;
+    if(!(abs>=1&&abs<=YR_TOT))return null;
+    const shi=Math.ceil(abs/YR),  yrIn=abs-(shi-1)*YR;
+    const yun=Math.ceil(shi/SHI), shiIn=shi-(yun-1)*SHI;
+    const hui=Math.ceil(yun/YUN), yunIn=yun-(hui-1)*YUN;
+    return{abs,hui,yun,shi,yrIn,shiIn,yunIn,
+      huiZ:BR[(hui-1)%12], yunG:ST[(yun-1)%10], shiZ:BR[(shi-1)%12],
+      gz:gzOf(abs),
+      state:yun<KAIWU?"未開物":(yun>BIWU?"已閉物":"開物之後")};
+  }
+  return{coord,num2cn,gzOf};
+})();
+
+/* 依農曆年繪出座標列；干支與太乙所推者互校，不合則明示 */
+function paintHJJS(lunarYear,taiyiGz){
+  const box=document.getElementById("hjjsRow");
+  if(!box)return;
+  const c=HJJS.coord(lunarYear);
+  if(!c){box.innerHTML="";return;}
+  const N=HJJS.num2cn;
+  const pil=[["日","甲",1],["月",c.huiZ,c.hui],["星",c.yunG,c.yun],["辰",c.shiZ,c.shi]]
+    .map(([lv,g,n])=>`${lv}<b>${g}</b>${N(n)}`).join('<span class="hjSep">·</span>');
+  const clash=taiyiGz&&taiyiGz!==c.gz;
+  box.innerHTML=
+    `<span class="hjTitle">《皇極經世》紀年座標</span><span class="hjSep">｜</span>`+
+    `<span class="hjPil">${pil}</span><br>`+
+    `世內第${N(c.yrIn)}年<span class="hjSep">·</span>歲次 ${c.gz}`+
+    `<span class="hjSep">·</span>${c.state}<span class="hjSep">·</span>元年序 ${c.abs}`+
+    (clash?`<span class="hjSep">·</span><span class="hjWarn">⚠ 干支與太乙所推（${taiyiGz}）不合，請查</span>`:"")+
+    `<div class="hjNote">元會運世為《皇極經世》之紀年架構（一元十二會、一會三十運、一運十二世、一世三十年，共十二萬九千六百年），`+
+    `此處僅作另一系統之年代對照，<b>不參與太乙任何計算</b>。錨定西元＝元年序−67017，由原表帝堯甲辰、秦始皇十年二錨互證。`+
+    `年界從太乙所用之農曆年（正月初一）。原書未繫卦，卦運之說出後人推衍，本處不列。</div>`;
+}
 const statCard=(k,v,cls,ev,gk)=>`<div class="stat"><div class="k">${k}${ev?evBadge(ev):""}${gk&&GLOSS[gk]?`<span class="qmark" data-g="${gk}" title="說明">?</span>`:""}</div><div class="v ${cls||""}">${v}</div></div>`;
 
 function showGloss(gk){
@@ -1413,6 +1477,17 @@ function render(r){
   runInfo.classList.remove("flash");
   void runInfo.offsetWidth; // 重觸發動畫
   runInfo.classList.add("flash");
+
+  // 皇極經世座標（外掛對照，時計亦以其所屬農曆年推之）
+  try{
+    let ly=r.lunarYear, tgz=r.gz&&r.gz.gz;
+    if(ly===undefined){
+      const jdn=jdFromGregorian(r.year,r.month,r.day)+0.5;
+      ly=jdn>=chineseNewYearJDN(r.year)?r.year:r.year-1;
+      tgz=yearGanzhi(ly).gz;
+    }
+    paintHJJS(ly,tgz);
+  }catch(e){ console.warn("皇極座標繪製略過：",e); }
 
   document.getElementById("statGrid").innerHTML=
     (isHour
